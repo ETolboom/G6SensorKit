@@ -1,0 +1,99 @@
+//
+//  GlucoseTests.swift
+//  xDripG5
+//
+//  Created by Nate Racklyeft on 8/6/16.
+//  Copyright © 2016 Nathan Racklyeft. All rights reserved.
+//
+
+import XCTest
+@testable import G6SensorCore
+
+class GlucoseTests: XCTestCase {
+
+    var timeMessage: TransmitterTimeRxMessage!
+    var calendar = Calendar(identifier: .gregorian)
+    var activationDate: Date!
+
+    override func setUp() {
+        super.setUp()
+
+        let data = Data(hexadecimalString: "2500470272007cff710001000000fa1d")!
+        timeMessage = TransmitterTimeRxMessage(data: data)!
+
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+
+        activationDate = calendar.date(from: DateComponents(year: 2016, month: 10, day: 1))!
+    }
+
+    func testMessageData() {
+        let data = Data(hexadecimalString: "3100680a00008a715700cc0006ffc42a")!
+        let message = GlucoseRxMessage(data: data)!
+        let glucose = Glucose(transmitterID: "123456", glucoseMessage: message, timeMessage: timeMessage, activationDate: activationDate)
+
+        XCTAssertEqual(TransmitterStatus.ok, glucose.status)
+        XCTAssertEqual(calendar.date(from: DateComponents(year: 2016, month: 12, day: 6, hour: 7, minute: 51, second: 38))!, glucose.readDate)
+        XCTAssertEqual(calendar.date(from: DateComponents(year: 2016, month: 12, day: 26, hour: 11, minute: 16, second: 12)), glucose.sessionStartDate)
+        XCTAssertEqual(calendar.date(from: DateComponents(year: 2017, month: 1, day: 5, hour: 11, minute: 16, second: 12)), glucose.sessionExpDate)
+        XCTAssertTrue(glucose.hasValidSensorSession)
+        XCTAssertFalse(glucose.isDisplayOnly)
+        XCTAssertEqual(204, glucose.glucoseMgDL)
+        XCTAssertEqual(.known(.ok), glucose.state)
+        XCTAssertEqual(-1, glucose.trend)
+    }
+
+    func testNoSessionDoesNotDeriveFutureSessionDates() {
+        let timeData = Data(hexadecimalString: "2500e8f87100ffffffff010000000a70")!
+        let noSessionTimeMessage = TransmitterTimeRxMessage(data: timeData)!
+
+        let data = Data(hexadecimalString: "3100680a00008a715700cc0006ffc42a")!
+        let message = GlucoseRxMessage(data: data)!
+        let glucose = Glucose(transmitterID: "123456", glucoseMessage: message, timeMessage: noSessionTimeMessage, activationDate: activationDate)
+
+        XCTAssertFalse(noSessionTimeMessage.hasValidSensorSession)
+        XCTAssertFalse(glucose.hasValidSensorSession)
+        XCTAssertNil(glucose.sessionStartDate)
+        XCTAssertNil(glucose.sessionExpDate)
+        XCTAssertEqual(calendar.date(from: DateComponents(year: 2016, month: 12, day: 6, hour: 7, minute: 51, second: 38))!, glucose.readDate)
+    }
+
+    func testNegativeTrend() {
+        let data = Data(hexadecimalString: "31006f0a0000be7957007a0006e4818d")!
+        let message = GlucoseRxMessage(data: data)!
+        let glucose = Glucose(transmitterID: "123456", glucoseMessage: message, timeMessage: timeMessage, activationDate: activationDate)
+
+        XCTAssertEqual(TransmitterStatus.ok, glucose.status)
+        XCTAssertEqual(calendar.date(from: DateComponents(year: 2016, month: 12, day: 6, hour: 8, minute: 26, second: 38))!, glucose.readDate)
+        XCTAssertFalse(glucose.isDisplayOnly)
+        XCTAssertEqual(122, glucose.glucoseMgDL)
+        XCTAssertEqual(.known(.ok), glucose.state)
+        XCTAssertEqual(-28, glucose.trend)
+    }
+
+    func testDisplayOnly() {
+        let data = Data(hexadecimalString: "3100700a0000f17a5700584006e3cee9")!
+        let message = GlucoseRxMessage(data: data)!
+        let glucose = Glucose(transmitterID: "123456", glucoseMessage: message, timeMessage: timeMessage, activationDate: activationDate)
+
+        XCTAssertEqual(TransmitterStatus.ok, glucose.status)
+        XCTAssertEqual(calendar.date(from: DateComponents(year: 2016, month: 12, day: 6, hour: 8, minute: 31, second: 45))!, glucose.readDate)
+        XCTAssertTrue(glucose.isDisplayOnly)
+        XCTAssertEqual(88, glucose.glucoseMgDL)
+        XCTAssertEqual(.known(.ok), glucose.state)
+        XCTAssertEqual(-29, message.glucose.trend)
+    }
+
+    func testOldTransmitter() {
+        let data = Data(hexadecimalString: "3100aa00000095a078008b00060a8b34")!
+        let message = GlucoseRxMessage(data: data)!
+        let glucose = Glucose(transmitterID: "123456", glucoseMessage: message, timeMessage: timeMessage, activationDate: activationDate)
+
+        XCTAssertEqual(TransmitterStatus.ok, glucose.status)
+        XCTAssertEqual(calendar.date(from: DateComponents(year: 2016, month: 12, day: 31, hour: 11, minute: 57, second: 09))!, glucose.readDate)  // 90 days, status is still OK
+        XCTAssertFalse(glucose.isDisplayOnly)
+        XCTAssertEqual(139, glucose.glucoseMgDL)
+        XCTAssertEqual(.known(.ok), glucose.state)
+        XCTAssertEqual(10, message.glucose.trend)
+    }
+    
+}

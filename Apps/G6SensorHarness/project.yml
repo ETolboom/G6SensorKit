@@ -1,0 +1,34 @@
+# G6SensorHarness — standalone PoC app exercising G6SensorCore on a live
+# transmitter, independent of a Loop/Trio build.
+#
+# Generate the Xcode project with:  xcodegen -s Apps/G6SensorHarness/project.yml
+# (brew install xcodegen)
+#
+name: G6SensorHarness
+options:
+  bundleIdPrefix: org.nightscout
+  deploymentTarget:
+    iOS: "15.0"
+settings:
+  TARGETED_DEVICE_FAMILY: "1"
+  SWIFT_VERSION: "5.9"
+packages:
+  G6SensorCore:
+    path: ../..
+targets:
+  G6SensorHarness:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+    dependencies:
+      - package: G6SensorCore
+    info:
+      path: Sources/Info.plist
+      properties:
+        UILaunchScreen: {}
+        NSBluetoothAlwaysUsageDescription: >-
+          G6SensorHarness connects to your Dexcom transmitter over Bluetooth
+          to read glucose values.
+        UIBackgroundModes:
+          - bluetooth-central

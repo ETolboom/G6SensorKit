@@ -1,0 +1,790 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Sensor Failed": {
+      "extractionState": "manual",
+      "comment": "Status highlight for failed sensor"
+    },
+    "Sensor Warmup": {
+      "extractionState": "manual",
+      "comment": "Status highlight during warm-up"
+    },
+    "Transmitter Expired": {
+      "extractionState": "manual",
+      "comment": "Status highlight when the transmitter is past end of life"
+    },
+    "No Sensor": {
+      "extractionState": "manual",
+      "comment": "Status highlight when no session is running"
+    },
+    "Sensor Expired": {
+      "extractionState": "manual",
+      "comment": "Status highlight for expired sensor"
+    },
+    "Calibration Needed": {
+      "extractionState": "manual",
+      "comment": "Status highlight when a calibration is requested"
+    },
+    "Signal Loss": {
+      "extractionState": "manual",
+      "comment": "Status highlight for signal loss"
+    },
+    "This app": {
+      "extractionState": "manual",
+      "comment": "Fallback when the host app name cannot be read"
+    },
+    "Transmitter ID": {
+      "extractionState": "manual",
+      "comment": "Navigation title for transmitter ID entry"
+    },
+    "Sensor Code": {
+      "extractionState": "manual",
+      "comment": "Navigation title for sensor code entry"
+    },
+    "Applying Your Sensor": {
+      "extractionState": "manual",
+      "comment": "Navigation title for placement guide"
+    },
+    "Pairing": {
+      "extractionState": "manual",
+      "comment": "Navigation title for pairing screen"
+    },
+    "Warm-Up": {
+      "extractionState": "manual",
+      "comment": "Navigation title for warm-up screen"
+    },
+    "Dexcom G6 / ONE": {
+      "extractionState": "manual",
+      "comment": "Navigation title for settings"
+    },
+    "Calibration": {
+      "extractionState": "manual",
+      "comment": "Navigation title for calibration"
+    },
+    "Transmitter": {
+      "extractionState": "manual",
+      "comment": "Navigation title for transmitter details"
+    },
+    "Session Length": {
+      "extractionState": "manual",
+      "comment": "Navigation title for sensor life settings"
+    },
+    "Dexcom Share": {
+      "extractionState": "manual",
+      "comment": "Navigation title for Share upload settings"
+    },
+    "INSERT SENSOR": {
+      "extractionState": "manual",
+      "comment": "Section label for the insert-sensor steps"
+    },
+    "STEP %d of 10": {
+      "extractionState": "manual",
+      "comment": "Insert-sensor step counter (1: step number)"
+    },
+    "Thoroughly wash and dry your hands.": {
+      "extractionState": "manual",
+      "comment": "Insert step 1 body"
+    },
+    "Clean the insertion site with alcohol. Let it dry.": {
+      "extractionState": "manual",
+      "comment": "Insert step 2 body"
+    },
+    "The site must be completely dry or the adhesive will not stick.": {
+      "extractionState": "manual",
+      "comment": "Insert step 2 note"
+    },
+    "Optional: if you use a skin adhesive, draw an empty oval on the skin and let it dry.": {
+      "extractionState": "manual",
+      "comment": "Insert step 3 body"
+    },
+    "Insert the sensor on clean skin in the centre of the oval, not on the adhesive itself.": {
+      "extractionState": "manual",
+      "comment": "Insert step 3 note"
+    },
+    "Take out the applicator whose sensor code you entered, and peel off its cover.": {
+      "extractionState": "manual",
+      "comment": "Insert step 4 body"
+    },
+    "Do not use it if the packaging is damaged or was already opened. Keep the packaging until the session is finished.": {
+      "extractionState": "manual",
+      "comment": "Insert step 4 note"
+    },
+    "Pull off both adhesive labels.": {
+      "extractionState": "manual",
+      "comment": "Insert step 5 body"
+    },
+    "Keep the tab showing the sensor code. Do not touch the adhesive.": {
+      "extractionState": "manual",
+      "comment": "Insert step 5 note"
+    },
+    "Place the applicator flat against your skin — horizontally, not upright — and press down firmly.": {
+      "extractionState": "manual",
+      "comment": "Insert step 6 body"
+    },
+    "Fold and break off the safety guard, then throw it away.": {
+      "extractionState": "manual",
+      "comment": "Insert step 7 body"
+    },
+    "Push and release the button to insert the sensor.": {
+      "extractionState": "manual",
+      "comment": "Insert step 8 body"
+    },
+    "Lift the applicator away.": {
+      "extractionState": "manual",
+      "comment": "Insert step 9 body"
+    },
+    "Dispose of the applicator following your local rules for items that have touched blood.": {
+      "extractionState": "manual",
+      "comment": "Insert step 9 note"
+    },
+    "Left on your skin: the sensor wire and the transmitter holder. The sensor is in.": {
+      "extractionState": "manual",
+      "comment": "Insert step 10 body"
+    },
+    "ATTACH TRANSMITTER": {
+      "extractionState": "manual",
+      "comment": "Section label for the attach-transmitter steps"
+    },
+    "STEP %d of 4": {
+      "extractionState": "manual",
+      "comment": "Attach-transmitter step counter (1: step number)"
+    },
+    "Take the transmitter out of its box and prepare it for use. Wipe the bottom with an alcohol wipe and let it dry.": {
+      "extractionState": "manual",
+      "comment": "Attach step 1 body"
+    },
+    "Do not touch the metal contacts and do not scratch the bottom — that can break the waterproof seal.": {
+      "extractionState": "manual",
+      "comment": "Attach step 1 note"
+    },
+    "Slide the transmitter tab into the slot at the narrow end of the holder.": {
+      "extractionState": "manual",
+      "comment": "Attach step 3 body"
+    },
+    "Press the wide end of the transmitter until it clicks into the holder.": {
+      "extractionState": "manual",
+      "comment": "Attach step 4 body"
+    },
+    "Rub your fingers around the patch three times to secure it.": {
+      "extractionState": "manual",
+      "comment": "Attach step 5 body"
+    },
+    "You are almost done — the sensor session starts next.": {
+      "extractionState": "manual",
+      "comment": "Attach step 5 note"
+    },
+    "Apply a new sensor": {
+      "extractionState": "manual",
+      "comment": "Apply-sensor screen title"
+    },
+    "Adults wear the sensor on the belly. Children aged 2 to 17 can use the belly or upper buttocks.": {
+      "extractionState": "manual",
+      "comment": "Apply-sensor site instruction"
+    },
+    "Keep at least 8 cm (3 inches) away from insulin pump sites and injection sites, and avoid scars, bony areas, and your waistband.": {
+      "extractionState": "manual",
+      "comment": "Apply-sensor spacing instruction"
+    },
+    "HOW TO APPLY A SENSOR": {
+      "extractionState": "manual",
+      "comment": "Apply-sensor help button"
+    },
+    "Next": {
+      "extractionState": "manual",
+      "comment": "Next button"
+    },
+    "How to apply a sensor": {
+      "extractionState": "manual",
+      "comment": "Apply-sensor help screen title"
+    },
+    "Done": {
+      "extractionState": "manual",
+      "comment": "Done button"
+    },
+    "CALIBRATE": {
+      "extractionState": "manual",
+      "comment": "Section label for the calibration steps"
+    },
+    "STEP %d of 3": {
+      "extractionState": "manual",
+      "comment": "Calibration step counter (1: step number)"
+    },
+    "Wash and dry your hands with soap and water — not a gel cleaner.": {
+      "extractionState": "manual",
+      "comment": "Calibration step 1 body"
+    },
+    "Poorly washed hands are behind most inaccurate meter readings, and an inaccurate reading teaches the sensor the wrong thing.": {
+      "extractionState": "manual",
+      "comment": "Calibration step 1 note"
+    },
+    "Take a blood sample from your fingertip and measure it with your meter.": {
+      "extractionState": "manual",
+      "comment": "Calibration step 2 body"
+    },
+    "Use a fingertip only — samples from other sites are less accurate. Use the same meter throughout a sensor session, and check that your strips are in date.": {
+      "extractionState": "manual",
+      "comment": "Calibration step 2 note"
+    },
+    "Enter the exact value your meter showed, within 5 minutes of the fingerstick.": {
+      "extractionState": "manual",
+      "comment": "Calibration step 3 body"
+    },
+    "Do not round the number or reuse an older reading. If more than 5 minutes have passed, measure again.": {
+      "extractionState": "manual",
+      "comment": "Calibration step 3 note"
+    },
+    "How to calibrate": {
+      "extractionState": "manual",
+      "comment": "Calibration help screen title"
+    },
+    "Enter a fingerstick value": {
+      "extractionState": "manual",
+      "comment": "Calibration screen heading"
+    },
+    "Use a fresh fingerstick reading from your meter, taken just now. Wash and dry your hands first — a value from unwashed fingers can be badly wrong and will teach the sensor the wrong thing.": {
+      "extractionState": "manual",
+      "comment": "Calibration instructions"
+    },
+    "HOW TO CALIBRATE": {
+      "extractionState": "manual",
+      "comment": "Calibration help button"
+    },
+    "mg/dL": {
+      "extractionState": "manual",
+      "comment": "Calibration value text field placeholder"
+    },
+    "It may take a few minutes": {
+      "extractionState": "manual",
+      "comment": "Calibration callout title"
+    },
+    "The calibration is sent the next time your transmitter connects, which can be up to 5 minutes away. The transmitter may accept it, ask for a second value, or reject it — this screen's status will tell you which.": {
+      "extractionState": "manual",
+      "comment": "Calibration callout body about delivery timing"
+    },
+    "Send Calibration": {
+      "extractionState": "manual",
+      "comment": "Calibration submit button"
+    },
+    "Enter a number.": {
+      "extractionState": "manual",
+      "comment": "Validation message for non-numeric calibration entry"
+    },
+    "Calibrations must be between %d and %d mg/dL. If your meter reads outside that range, treat it and follow your care team's guidance instead of calibrating.": {
+      "extractionState": "manual",
+      "comment": "Validation message for out-of-range calibration (1: minimum, 2: maximum)"
+    },
+    "Pair New Transmitter": {
+      "extractionState": "manual",
+      "comment": "Row to pair a different transmitter"
+    },
+    "Pair a new transmitter?": {
+      "extractionState": "manual",
+      "comment": "Confirmation title for pairing a new transmitter"
+    },
+    "Continue": {
+      "extractionState": "manual",
+      "comment": "Confirm pairing a new transmitter"
+    },
+    "Your current sensor session will end. A session lives on the transmitter, so it cannot move to a new one — you will start a fresh session after pairing, and can reuse the sensor you are wearing. Stop the sensor first if your old transmitter is still attached and you want it stopped cleanly. Your other settings are kept.": {
+      "extractionState": "manual",
+      "comment": "Confirmation message for pairing a new transmitter while a session is running"
+    },
+    "You will enter the new transmitter's ID and can then start a sensor session on it. Your other settings are kept.": {
+      "extractionState": "manual",
+      "comment": "Confirmation message for pairing a new transmitter with no session running"
+    },
+    "Model": {
+      "extractionState": "manual",
+      "comment": "Transmitter detail label for model"
+    },
+    "Firmware": {
+      "extractionState": "manual",
+      "comment": "Transmitter detail label for firmware"
+    },
+    "Unknown": {
+      "extractionState": "manual",
+      "comment": "Placeholder for unknown value"
+    },
+    "First used": {
+      "extractionState": "manual",
+      "comment": "Transmitter detail label for activation date"
+    },
+    "Expected to expire": {
+      "extractionState": "manual",
+      "comment": "Transmitter detail label for expiry"
+    },
+    "Reported lifetime": {
+      "extractionState": "manual",
+      "comment": "Transmitter detail label for reported lifetime"
+    },
+    "%d days": {
+      "extractionState": "manual",
+      "comment": "Number of days (1: day count)"
+    },
+    "Lifetime": {
+      "extractionState": "manual",
+      "comment": "Transmitter details section header for lifetime"
+    },
+    "This transmitter is past the end of its life. It still reports readings for a running session, but cannot start a new sensor.": {
+      "extractionState": "manual",
+      "comment": "Footer shown when the transmitter has expired"
+    },
+    "This transmitter reports an extended 180-day lifetime, which means it has been modified. Warm-up is shorter and you can choose how long sessions run.": {
+      "extractionState": "manual",
+      "comment": "Footer explaining Anubis detection"
+    },
+    "Session length: %d days": {
+      "extractionState": "manual",
+      "comment": "Session length value (1: day count)"
+    },
+    "Modified transmitters can keep a sensor running past the standard 10 days. This setting only changes when this app treats the session as finished; it does not change the sensor's accuracy. Sensor readings can drift the longer a sensor is worn, so check against a fingerstick meter if a reading does not match how you feel.": {
+      "extractionState": "manual",
+      "comment": "Footer explaining extended session length and its accuracy caveat"
+    },
+    "Upload to Dexcom Share": {
+      "extractionState": "manual",
+      "comment": "Toggle label for Share upload"
+    },
+    "Turning this on sends your readings to Dexcom Share so people who follow you can see them in the Dexcom Follow app. It is optional, and your readings still work in this app without it.": {
+      "extractionState": "manual",
+      "comment": "Footer explaining Share upload"
+    },
+    "Username": {
+      "extractionState": "manual",
+      "comment": "Share account username field"
+    },
+    "Password": {
+      "extractionState": "manual",
+      "comment": "Share account password field"
+    },
+    "Save Credentials": {
+      "extractionState": "manual",
+      "comment": "Button to save Share credentials"
+    },
+    "Dexcom Account": {
+      "extractionState": "manual",
+      "comment": "Section header for Share account"
+    },
+    "Your username and password are stored in the iOS Keychain on this device only. They are never written into app settings, logs, or backups of this app's data.": {
+      "extractionState": "manual",
+      "comment": "Footer explaining Keychain credential storage"
+    },
+    "Upload turned off and saved credentials removed.": {
+      "extractionState": "manual",
+      "comment": "Status message after disabling Share upload"
+    },
+    "Credentials saved to the Keychain.": {
+      "extractionState": "manual",
+      "comment": "Status message after saving Share credentials"
+    },
+    "Could not save your credentials. Try again.": {
+      "extractionState": "manual",
+      "comment": "Status message when saving Share credentials fails"
+    },
+    "Warming Up": {
+      "extractionState": "manual",
+      "comment": "Session phase: warm-up"
+    },
+    "Active": {
+      "extractionState": "manual",
+      "comment": "Session phase: active"
+    },
+    "Ending Soon": {
+      "extractionState": "manual",
+      "comment": "Session phase: expiring soon"
+    },
+    "Session Ended": {
+      "extractionState": "manual",
+      "comment": "Session phase: expired"
+    },
+    "No Signal": {
+      "extractionState": "manual",
+      "comment": "Session phase: signal loss"
+    },
+    "Dexcom G6": {
+      "extractionState": "manual",
+      "comment": "Introduction screen product title"
+    },
+    "%1$@ talks to your G6 or Dexcom ONE transmitter directly. It starts and stops sensor sessions, sends your calibrations, and fills in readings it missed.": {
+      "extractionState": "manual",
+      "comment": "Introduction: what the native driver does (1: app name)"
+    },
+    "You do not need the Dexcom app — and you must not let it use the same transmitter at the same time.": {
+      "extractionState": "manual",
+      "comment": "Introduction: single-app requirement"
+    },
+    "Enter your transmitter ID": {
+      "extractionState": "manual",
+      "comment": "Transmitter ID screen heading"
+    },
+    "On the transmitter box, next to the barcode.": {
+      "extractionState": "manual",
+      "comment": "Transmitter ID: location on the box"
+    },
+    "Or on the back of the transmitter itself.": {
+      "extractionState": "manual",
+      "comment": "Transmitter ID: location on the transmitter"
+    },
+    "6-character ID": {
+      "extractionState": "manual",
+      "comment": "Transmitter ID text field placeholder"
+    },
+    "This app works with Dexcom G6 and Dexcom ONE transmitters. Older G5 transmitters, whose IDs begin with 4, are not supported.": {
+      "extractionState": "manual",
+      "comment": "Transmitter ID: supported hardware note"
+    },
+    "IDs that begin with 4 belong to Dexcom G5 transmitters, which this app does not support.": {
+      "extractionState": "manual",
+      "comment": "Validation message for G5 transmitter ID"
+    },
+    "Enter your sensor code": {
+      "extractionState": "manual",
+      "comment": "Sensor code screen heading"
+    },
+    "The 4-digit code is on the applicator’s adhesive label, and is unique to that sensor. Use the code from the applicator you are about to insert — a code from a different one will make readings inaccurate.": {
+      "extractionState": "manual",
+      "comment": "Sensor code: where to find it"
+    },
+    "4-digit code": {
+      "extractionState": "manual",
+      "comment": "Sensor code text field placeholder"
+    },
+    "No code on your sensor?": {
+      "extractionState": "manual",
+      "comment": "Sensor code callout title"
+    },
+    "You can start without one. The transmitter will then ask you for two fingerstick glucose values after warm-up, and for one more each day. \"Calibration\" means telling the sensor what your meter reads, so it can correct itself.": {
+      "extractionState": "manual",
+      "comment": "Sensor code callout body explaining calibration"
+    },
+    "Use This Code": {
+      "extractionState": "manual",
+      "comment": "Sensor code submit button"
+    },
+    "Start Without a Code": {
+      "extractionState": "manual",
+      "comment": "Button to start a session with no sensor code"
+    },
+    "Start without a sensor code?": {
+      "extractionState": "manual",
+      "comment": "Confirmation title for a code-less session"
+    },
+    "Enter the Code": {
+      "extractionState": "manual",
+      "comment": "Return to entering the sensor code"
+    },
+    "Without the code the sensor cannot use its factory calibration, and the transmitter will ask you for two fingerstick values after warm-up and one every day after that. The code is on the applicator label.": {
+      "extractionState": "manual",
+      "comment": "Confirmation message explaining a code-less session"
+    },
+    "That code isn't one this app recognizes. Check the digits on the applicator label, or start without a code.": {
+      "extractionState": "manual",
+      "comment": "Validation message for unrecognized sensor code"
+    },
+    "Connecting to your transmitter": {
+      "extractionState": "manual",
+      "comment": "Pairing screen heading"
+    },
+    "Your transmitter only talks to your phone about once every 5 minutes, so this can take a few minutes. Keep your phone nearby.": {
+      "extractionState": "manual",
+      "comment": "Pairing: explanation of the 5-minute cycle"
+    },
+    "Tap Pair on the iOS prompt": {
+      "extractionState": "manual",
+      "comment": "Pairing callout title while awaiting the prompt"
+    },
+    "Accept the Bluetooth pairing request within about a minute. If it disappears, the app tries again on the next connection.": {
+      "extractionState": "manual",
+      "comment": "Pairing callout body while awaiting the prompt"
+    },
+    "A pairing request will appear": {
+      "extractionState": "manual",
+      "comment": "Pairing callout title"
+    },
+    "The first time they connect, iOS shows a Bluetooth pairing request. Tap Pair within about a minute — if it disappears, the app will try again on the next connection.": {
+      "extractionState": "manual",
+      "comment": "Pairing callout body about the iOS prompt"
+    },
+    "Sensor session found": {
+      "extractionState": "manual",
+      "comment": "Pairing success label for an existing session"
+    },
+    "Still looking": {
+      "extractionState": "manual",
+      "comment": "Pairing troubleshooting title"
+    },
+    "Check that the Dexcom app is not connected to this transmitter, that the transmitter ID is exactly right, and that your phone is next to it. Bluetooth must be on.": {
+      "extractionState": "manual",
+      "comment": "Pairing troubleshooting body"
+    },
+    "Share Logs": {
+      "extractionState": "manual",
+      "comment": "Row to export the log files"
+    },
+    "Connected to your transmitter": {
+      "extractionState": "manual",
+      "comment": "Pairing status: connected"
+    },
+    "Waiting for you to accept pairing…": {
+      "extractionState": "manual",
+      "comment": "Pairing status: awaiting prompt"
+    },
+    "Looking for your transmitter…": {
+      "extractionState": "manual",
+      "comment": "Pairing status: searching"
+    },
+    "Your sensor is warming up": {
+      "extractionState": "manual",
+      "comment": "Warm-up screen heading"
+    },
+    "Warm-up takes about %d minutes. You will not get any glucose readings until it finishes.": {
+      "extractionState": "manual",
+      "comment": "Warm-up duration explanation (1: minutes)"
+    },
+    "Do not dose on early readings": {
+      "extractionState": "manual",
+      "comment": "Warm-up callout title"
+    },
+    "Do not make insulin decisions from the first readings after warm-up, or from readings that look wrong for how you feel. Use a fingerstick meter instead, and follow your care team's guidance.": {
+      "extractionState": "manual",
+      "comment": "Warm-up callout body about dosing safety"
+    },
+    "Expected to finish at %@": {
+      "extractionState": "manual",
+      "comment": "Warm-up completion time (1: time)"
+    },
+    "Trend": {
+      "extractionState": "manual",
+      "comment": "Reading detail label for trend"
+    },
+    "Sensor status": {
+      "extractionState": "manual",
+      "comment": "Reading detail label for algorithm state"
+    },
+    "Display only": {
+      "extractionState": "manual",
+      "comment": "Reading detail label for display-only flag"
+    },
+    "Yes": {
+      "extractionState": "manual",
+      "comment": "Affirmative"
+    },
+    "No": {
+      "extractionState": "manual",
+      "comment": "Negative"
+    },
+    "Reading": {
+      "extractionState": "manual",
+      "comment": "Reading detail section header"
+    },
+    "A display-only value has been shifted by a recent calibration. It is shown for continuity and is not used for dosing.": {
+      "extractionState": "manual",
+      "comment": "Footer explaining display-only readings"
+    },
+    "Device": {
+      "extractionState": "manual",
+      "comment": "Reading detail label for device"
+    },
+    "Identifier": {
+      "extractionState": "manual",
+      "comment": "Reading detail label for sync identifier"
+    },
+    "Source": {
+      "extractionState": "manual",
+      "comment": "Reading detail section header for source"
+    },
+    "The identifier is derived from the transmitter's own clock, so the same reading keeps one identity whether it arrives live or is filled in later.": {
+      "extractionState": "manual",
+      "comment": "Footer explaining the sync identifier"
+    },
+    "Latest Reading": {
+      "extractionState": "manual",
+      "comment": "Reading detail screen title"
+    },
+    "Not available": {
+      "extractionState": "manual",
+      "comment": "Value when the transmitter reports no trend"
+    },
+    "%@%.1f mg/dL per minute": {
+      "extractionState": "manual",
+      "comment": "Trend rate (1: sign, 2: rate)"
+    },
+    "Sensor failed": {
+      "extractionState": "manual",
+      "comment": "Algorithm state: failed"
+    },
+    "Warming up": {
+      "extractionState": "manual",
+      "comment": "Algorithm state: warm-up"
+    },
+    "Session stopped": {
+      "extractionState": "manual",
+      "comment": "Algorithm state: stopped"
+    },
+    "Calibration requested": {
+      "extractionState": "manual",
+      "comment": "Algorithm state: needs calibration"
+    },
+    "OK": {
+      "extractionState": "manual",
+      "comment": "Algorithm state: ok"
+    },
+    "Unusable (code %d)": {
+      "extractionState": "manual",
+      "comment": "Algorithm state: unusable with raw code"
+    },
+    "Start time unknown": {
+      "extractionState": "manual",
+      "comment": "Detail when a session is running but its start is unknown"
+    },
+    "%@ until ready": {
+      "extractionState": "manual",
+      "comment": "Warm-up remaining (1: duration)"
+    },
+    "Replace sensor": {
+      "extractionState": "manual",
+      "comment": "Detail when the session is over"
+    },
+    "%@ remaining": {
+      "extractionState": "manual",
+      "comment": "Session remaining (1: duration)"
+    },
+    "—": {
+      "extractionState": "manual",
+      "comment": "Placeholder for missing value"
+    },
+    "Just now": {
+      "extractionState": "manual",
+      "comment": "Reading received less than a minute ago"
+    },
+    "%d min ago": {
+      "extractionState": "manual",
+      "comment": "Minutes since last reading (1: minutes)"
+    },
+    "%dd %dh": {
+      "extractionState": "manual",
+      "comment": "Duration in days and hours"
+    },
+    "%dh %dm": {
+      "extractionState": "manual",
+      "comment": "Duration in hours and minutes"
+    },
+    "%dm": {
+      "extractionState": "manual",
+      "comment": "Duration in minutes"
+    },
+    "Sensor start queued — it is sent the next time the transmitter connects, which can take up to 5 minutes.": {
+      "extractionState": "manual",
+      "comment": "Shown while a session start is waiting for the next connection"
+    },
+    "Sensor": {
+      "extractionState": "manual",
+      "comment": "Settings section: sensor"
+    },
+    "Last Reading": {
+      "extractionState": "manual",
+      "comment": "Settings section: last reading"
+    },
+    "%@%.1f mg/dL/min": {
+      "extractionState": "manual",
+      "comment": "Trend rate (1: sign, 2: rate)"
+    },
+    "No readings — replace the sensor.": {
+      "extractionState": "manual",
+      "comment": "Placeholder when the sensor has failed"
+    },
+    "Warming up — readings start soon.": {
+      "extractionState": "manual",
+      "comment": "Placeholder during warm-up"
+    },
+    "Waiting for first reading…": {
+      "extractionState": "manual",
+      "comment": "Placeholder before the first reading"
+    },
+    "Sensor started": {
+      "extractionState": "manual",
+      "comment": "Metadata label for sensor start"
+    },
+    "Session ends": {
+      "extractionState": "manual",
+      "comment": "Metadata label for session end"
+    },
+    "Sensor code": {
+      "extractionState": "manual",
+      "comment": "Metadata label for sensor code"
+    },
+    "Not used": {
+      "extractionState": "manual",
+      "comment": "Value when a session runs without a sensor code"
+    },
+    "Start New Sensor": {
+      "extractionState": "manual",
+      "comment": "Button to begin a new sensor session"
+    },
+    "Enter Calibration": {
+      "extractionState": "manual",
+      "comment": "Button to enter a calibration"
+    },
+    "After warm-up": {
+      "extractionState": "manual",
+      "comment": "Why calibration is unavailable during warm-up"
+    },
+    "No sensor": {
+      "extractionState": "manual",
+      "comment": "Why calibration is unavailable without a session"
+    },
+    "Stop Sensor Session": {
+      "extractionState": "manual",
+      "comment": "Button to stop the sensor session"
+    },
+    "Stop this sensor session?": {
+      "extractionState": "manual",
+      "comment": "Confirmation title for stopping a session"
+    },
+    "Stop Session": {
+      "extractionState": "manual",
+      "comment": "Confirm stop session"
+    },
+    "You will stop getting readings until you start a new sensor. A stopped session cannot be restarted.": {
+      "extractionState": "manual",
+      "comment": "Confirmation message for stopping a session"
+    },
+    "Calibration becomes available once warm-up finishes. Do not make insulin decisions from early readings — use a fingerstick meter and follow your care team's guidance.": {
+      "extractionState": "manual",
+      "comment": "Footer explaining warm-up restrictions"
+    },
+    "Transmitter Details": {
+      "extractionState": "manual",
+      "comment": "Row to transmitter details"
+    },
+    "Dexcom Share Upload": {
+      "extractionState": "manual",
+      "comment": "Row to Share upload settings"
+    },
+    "How to Apply a Sensor": {
+      "extractionState": "manual",
+      "comment": "Row to the placement guide"
+    },
+    "Remove CGM from App": {
+      "extractionState": "manual",
+      "comment": "Button to delete the CGM manager"
+    },
+    "Remove this CGM?": {
+      "extractionState": "manual",
+      "comment": "Confirmation title for removing the CGM"
+    },
+    "Remove CGM": {
+      "extractionState": "manual",
+      "comment": "Confirm CGM removal"
+    },
+    "This app will stop reading from your transmitter. Your sensor session keeps running on the transmitter itself.": {
+      "extractionState": "manual",
+      "comment": "Confirmation message for removing the CGM"
+    },
+    "“Dexcom”, “G6”, and “ONE” are trademarks of Dexcom, Inc., used here only to describe which devices are compatible. This app is not made by or endorsed by Dexcom.": {
+      "extractionState": "manual",
+      "comment": "Trademark attribution footer"
+    }
+  },
+  "version": "1.0"
+}

@@ -1,0 +1,862 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		04A1579BA5AC7E2B611F2EA3 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ACC688FB24E7C02A91FE2FC9 /* LoopKitUI.framework */; };
+		05C0A0DEE13910534D1CA9FA /* G6SimulatedSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C60739C24581051701D88DCE /* G6SimulatedSession.swift */; };
+		0EB2F0CF16D4CF09F4DB61C5 /* G6UICoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17DE2AC7E3CCE3E504BCE0E6 /* G6UICoordinator.swift */; };
+		12F66D149347B1A993D71044 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 96EE61156425FE1E4A4E1DEF /* Localizable.xcstrings */; };
+		165BD9D57F3152936420269C /* G6SensorKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 106822D6689DE79FC4CE356E /* G6SensorKitUI.framework */; };
+		2EC9777BB9C515531A8D7E16 /* G6SensorKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0411DD73A1DA9BD464AD782C /* G6SensorKit.framework */; };
+		34BBF8EDD9A8E8850A71A63D /* G6ActivityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2801E16AD34579D07C6146C2 /* G6ActivityViewController.swift */; };
+		37E1A7FFBF917C42499CEFC0 /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7953C390B03696D9D9E707CC /* LoopKit.framework */; };
+		3D713EE1AB14FD2064C36A7D /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7953C390B03696D9D9E707CC /* LoopKit.framework */; };
+		3E3E513B7ECC7FA49682ED70 /* G6SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFBFC9094AFAF8BE3B7C609 /* G6SettingsView.swift */; };
+		435699F738EF47CF2E51549C /* LocalizedString.swift in Sources */ = {isa = PBXBuildFile; fileRef = E944B5D99FAF3783535B20A4 /* LocalizedString.swift */; };
+		4A49484707FC951F21B84AAD /* G6Graphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 598E3F4B77E48F2F15510B0A /* G6Graphics.swift */; };
+		4B22132EF4B417308B866F87 /* G6DetailViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1FD245E92EF28F15FAA5AB /* G6DetailViews.swift */; };
+		4B818FABA9E5D6B9304865CF /* TimeInterval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47EA16ADCE2DDEB116774BBA /* TimeInterval.swift */; };
+		53B67390B7D193C165EB6481 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ACC688FB24E7C02A91FE2FC9 /* LoopKitUI.framework */; };
+		54C1B5EEA9B89DC6B19CEE8C /* G6OnboardingViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC78B54A6E69673FF5F9692 /* G6OnboardingViews.swift */; };
+		55069471F5F6E5C422338F01 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3868D88678605A02D5246E47 /* Assets.xcassets */; };
+		556E76473DCE38629E5ABF95 /* G6Alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4444ECEC11A05D56DF6C4B3 /* G6Alert.swift */; };
+		579620D8CEC32A4C85289249 /* G6AlertEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 781C7B50C547650BE343AA4A /* G6AlertEvaluator.swift */; };
+		62E6CBB0A78B9D0063237C76 /* G6CGMManager+UI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4890733AE89B4043545E62CB /* G6CGMManager+UI.swift */; };
+		733130EF04A16F3EFDD251D5 /* G6SensorKitPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF36A58EA3413E5EF5591A31 /* G6SensorKitPlugin.swift */; };
+		7D156DB76900796D86C9DF03 /* G6CalibrationGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F644E5E8D0017918564F3BF /* G6CalibrationGuideView.swift */; };
+		8817425A14772FC454B373B7 /* HKUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA3FCC4DFDC751B201397172 /* HKUnit.swift */; };
+		8865676B3FEAAE832145FB1B /* G6SensorKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0411DD73A1DA9BD464AD782C /* G6SensorKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		88790DE6204FDB74B1B00B2C /* G6CGMManagerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CF0A4E6E06E868A87706A20 /* G6CGMManagerState.swift */; };
+		8E46332BA17044CDD2FDB1D8 /* Locked.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B327285E4651BB28F341889 /* Locked.swift */; };
+		91356472908E18FF6F02F2FE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B2C2C3F18EDF9582DDFF9B7 /* Foundation.framework */; };
+		91F3818D128916FE27D56ABF /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 20A02D6167427F0B7637921B /* Localizable.xcstrings */; };
+		9B59F7E5E6EBD2F2B3B52CD4 /* LocalizedString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35D18CFA99C2280D06D9962F /* LocalizedString.swift */; };
+		A09553CBB20120D6F0AA175E /* OSLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2653704BDFFAD2E0E61B10FB /* OSLog.swift */; };
+		A4DDFBB4474DCDA2137EAFFD /* G6ApplySensorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A32DE15992781C41AC55D7E3 /* G6ApplySensorViews.swift */; };
+		CBCF97723A1D9B877EEB204B /* G6ReadingDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81509DECD9DB3656C601115F /* G6ReadingDetailView.swift */; };
+		CC87B53E5CEE70F901B2EC3C /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7953C390B03696D9D9E707CC /* LoopKit.framework */; };
+		CE1F7436FC0FBC79DD1042F2 /* G6ShareCredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68C1621B3B21C4A2ECCF1244 /* G6ShareCredentialStore.swift */; };
+		CF5564FAA05BAC83E21A7C23 /* G6CGMManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574DABB882722116FFB35456 /* G6CGMManager.swift */; };
+		D7C98A17ADD9CF6D89D828C1 /* G6SensorKitUI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 106822D6689DE79FC4CE356E /* G6SensorKitUI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D9348A7BC485F13C58B3FBD1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B2C2C3F18EDF9582DDFF9B7 /* Foundation.framework */; };
+		F0745581B614F32C39612EBD /* G6SensorKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0411DD73A1DA9BD464AD782C /* G6SensorKit.framework */; };
+		F911239BAE831F992D3108F5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B2C2C3F18EDF9582DDFF9B7 /* Foundation.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9FF41AE47971A56F63B99A29 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 12408E9B61407DEB2E54111D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B542083FDC847D5F56897D1F;
+			remoteInfo = G6SensorKitUI;
+		};
+		F82C12F15596125EDA63E63E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 12408E9B61407DEB2E54111D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F618E0794571356D35BC0EE5;
+			remoteInfo = G6SensorKit;
+		};
+		FF7E4746B17C1189DCBF15FA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 12408E9B61407DEB2E54111D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F618E0794571356D35BC0EE5;
+			remoteInfo = G6SensorKit;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E0D55C1C195528A4E3E9DCB6 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				8865676B3FEAAE832145FB1B /* G6SensorKit.framework in Embed Frameworks */,
+				D7C98A17ADD9CF6D89D828C1 /* G6SensorKitUI.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0411DD73A1DA9BD464AD782C /* G6SensorKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = G6SensorKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0B1FD245E92EF28F15FAA5AB /* G6DetailViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = G6DetailViews.swift; path = Views/G6DetailViews.swift; sourceTree = "<group>"; };
+		0B327285E4651BB28F341889 /* Locked.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Locked.swift; sourceTree = "<group>"; };
+		106822D6689DE79FC4CE356E /* G6SensorKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = G6SensorKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		17DE2AC7E3CCE3E504BCE0E6 /* G6UICoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = G6UICoordinator.swift; sourceTree = "<group>"; };
+		20A02D6167427F0B7637921B /* Localizable.xcstrings */ = {isa = PBXFileReference; includeInIndex = 1; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		2653704BDFFAD2E0E61B10FB /* OSLog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OSLog.swift; sourceTree = "<group>"; };
+		2801E16AD34579D07C6146C2 /* G6ActivityViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = G6ActivityViewController.swift; path = Views/G6ActivityViewController.swift; sourceTree = "<group>"; };
+		35D18CFA99C2280D06D9962F /* LocalizedString.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LocalizedString.swift; sourceTree = "<group>"; };
+		3868D88678605A02D5246E47 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		47EA16ADCE2DDEB116774BBA /* TimeInterval.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TimeInterval.swift; sourceTree = "<group>"; };
+		4890733AE89B4043545E62CB /* G6CGMManager+UI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "G6CGMManager+UI.swift"; sourceTree = "<group>"; };
+		4F644E5E8D0017918564F3BF /* G6CalibrationGuideView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = G6CalibrationGuideView.swift; path = Views/G6CalibrationGuideView.swift; sourceTree = "<group>"; };
+		574DABB882722116FFB35456 /* G6CGMManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = G6CGMManager.swift; sourceTree = "<group>"; };
+		598E3F4B77E48F2F15510B0A /* G6Graphics.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = G6Graphics.swift; path = Views/G6Graphics.swift; sourceTree = "<group>"; };
+		5CF0A4E6E06E868A87706A20 /* G6CGMManagerState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = G6CGMManagerState.swift; sourceTree = "<group>"; };
+		68C1621B3B21C4A2ECCF1244 /* G6ShareCredentialStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = G6ShareCredentialStore.swift; sourceTree = "<group>"; };
+		6B2C2C3F18EDF9582DDFF9B7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		6FBE085ECE1CB31A2DF6DBC4 /* G6SensorKitPlugin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = G6SensorKitPlugin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		781C7B50C547650BE343AA4A /* G6AlertEvaluator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = G6AlertEvaluator.swift; sourceTree = "<group>"; };
+		7953C390B03696D9D9E707CC /* LoopKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LoopKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		7AFBFC9094AFAF8BE3B7C609 /* G6SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = G6SettingsView.swift; path = Views/G6SettingsView.swift; sourceTree = "<group>"; };
+		81509DECD9DB3656C601115F /* G6ReadingDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = G6ReadingDetailView.swift; path = Views/G6ReadingDetailView.swift; sourceTree = "<group>"; };
+		96EE61156425FE1E4A4E1DEF /* Localizable.xcstrings */ = {isa = PBXFileReference; includeInIndex = 1; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		A32DE15992781C41AC55D7E3 /* G6ApplySensorViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = G6ApplySensorViews.swift; path = Views/G6ApplySensorViews.swift; sourceTree = "<group>"; };
+		A4444ECEC11A05D56DF6C4B3 /* G6Alert.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = G6Alert.swift; sourceTree = "<group>"; };
+		ACC688FB24E7C02A91FE2FC9 /* LoopKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LoopKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C60739C24581051701D88DCE /* G6SimulatedSession.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = G6SimulatedSession.swift; sourceTree = "<group>"; };
+		DA3FCC4DFDC751B201397172 /* HKUnit.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HKUnit.swift; sourceTree = "<group>"; };
+		DF36A58EA3413E5EF5591A31 /* G6SensorKitPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = G6SensorKitPlugin.swift; sourceTree = "<group>"; };
+		E944B5D99FAF3783535B20A4 /* LocalizedString.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LocalizedString.swift; sourceTree = "<group>"; };
+		FEC78B54A6E69673FF5F9692 /* G6OnboardingViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = G6OnboardingViews.swift; path = Views/G6OnboardingViews.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		052904EF67570983C198C9EE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F911239BAE831F992D3108F5 /* Foundation.framework in Frameworks */,
+				CC87B53E5CEE70F901B2EC3C /* LoopKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		60EEFA26278A7B5412BEB1FD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				91356472908E18FF6F02F2FE /* Foundation.framework in Frameworks */,
+				37E1A7FFBF917C42499CEFC0 /* LoopKit.framework in Frameworks */,
+				04A1579BA5AC7E2B611F2EA3 /* LoopKitUI.framework in Frameworks */,
+				2EC9777BB9C515531A8D7E16 /* G6SensorKit.framework in Frameworks */,
+				165BD9D57F3152936420269C /* G6SensorKitUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1763268500E724F8C58343A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D9348A7BC485F13C58B3FBD1 /* Foundation.framework in Frameworks */,
+				3D713EE1AB14FD2064C36A7D /* LoopKit.framework in Frameworks */,
+				53B67390B7D193C165EB6481 /* LoopKitUI.framework in Frameworks */,
+				F0745581B614F32C39612EBD /* G6SensorKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		697891A8892CFBB0742F76C2 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				DA3FCC4DFDC751B201397172 /* HKUnit.swift */,
+				35D18CFA99C2280D06D9962F /* LocalizedString.swift */,
+				0B327285E4651BB28F341889 /* Locked.swift */,
+				2653704BDFFAD2E0E61B10FB /* OSLog.swift */,
+				47EA16ADCE2DDEB116774BBA /* TimeInterval.swift */,
+			);
+			name = Common;
+			path = Common;
+			sourceTree = "<group>";
+		};
+		99D02A49512FD0E206DE57E5 /* G6SensorKitPlugin */ = {
+			isa = PBXGroup;
+			children = (
+				DF36A58EA3413E5EF5591A31 /* G6SensorKitPlugin.swift */,
+			);
+			name = G6SensorKitPlugin;
+			path = G6SensorKitPlugin;
+			sourceTree = "<group>";
+		};
+		AA2050DB3EE1D7F75CF79C68 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0411DD73A1DA9BD464AD782C /* G6SensorKit.framework */,
+				106822D6689DE79FC4CE356E /* G6SensorKitUI.framework */,
+				6FBE085ECE1CB31A2DF6DBC4 /* G6SensorKitPlugin.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BA16B1013269D05D51B19E3B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7953C390B03696D9D9E707CC /* LoopKit.framework */,
+				ACC688FB24E7C02A91FE2FC9 /* LoopKitUI.framework */,
+				F7E9E41051D5A4A41F65108B /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D9C84E3042484468F5542A95 = {
+			isa = PBXGroup;
+			children = (
+				F280532FFF198B466DCDB6AB /* G6SensorKit */,
+				697891A8892CFBB0742F76C2 /* Common */,
+				D9D88645B5A1BF9C5410A17B /* G6SensorKitUI */,
+				99D02A49512FD0E206DE57E5 /* G6SensorKitPlugin */,
+				AA2050DB3EE1D7F75CF79C68 /* Products */,
+				BA16B1013269D05D51B19E3B /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		D9D88645B5A1BF9C5410A17B /* G6SensorKitUI */ = {
+			isa = PBXGroup;
+			children = (
+				4890733AE89B4043545E62CB /* G6CGMManager+UI.swift */,
+				17DE2AC7E3CCE3E504BCE0E6 /* G6UICoordinator.swift */,
+				E944B5D99FAF3783535B20A4 /* LocalizedString.swift */,
+				2801E16AD34579D07C6146C2 /* G6ActivityViewController.swift */,
+				A32DE15992781C41AC55D7E3 /* G6ApplySensorViews.swift */,
+				4F644E5E8D0017918564F3BF /* G6CalibrationGuideView.swift */,
+				0B1FD245E92EF28F15FAA5AB /* G6DetailViews.swift */,
+				598E3F4B77E48F2F15510B0A /* G6Graphics.swift */,
+				FEC78B54A6E69673FF5F9692 /* G6OnboardingViews.swift */,
+				81509DECD9DB3656C601115F /* G6ReadingDetailView.swift */,
+				7AFBFC9094AFAF8BE3B7C609 /* G6SettingsView.swift */,
+				96EE61156425FE1E4A4E1DEF /* Localizable.xcstrings */,
+				3868D88678605A02D5246E47 /* Assets.xcassets */,
+			);
+			name = G6SensorKitUI;
+			path = G6SensorKitUI;
+			sourceTree = "<group>";
+		};
+		F280532FFF198B466DCDB6AB /* G6SensorKit */ = {
+			isa = PBXGroup;
+			children = (
+				A4444ECEC11A05D56DF6C4B3 /* G6Alert.swift */,
+				781C7B50C547650BE343AA4A /* G6AlertEvaluator.swift */,
+				574DABB882722116FFB35456 /* G6CGMManager.swift */,
+				5CF0A4E6E06E868A87706A20 /* G6CGMManagerState.swift */,
+				68C1621B3B21C4A2ECCF1244 /* G6ShareCredentialStore.swift */,
+				C60739C24581051701D88DCE /* G6SimulatedSession.swift */,
+				20A02D6167427F0B7637921B /* Localizable.xcstrings */,
+			);
+			name = G6SensorKit;
+			path = G6SensorKit;
+			sourceTree = "<group>";
+		};
+		F7E9E41051D5A4A41F65108B /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				6B2C2C3F18EDF9582DDFF9B7 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		ADF7F3947A83064D9319DEA9 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B48FA6ADF28E27B4B55C0A71 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E9058A1C9AF9D65301B0E1A7 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		6731AFC096339FA82A1DF5B3 /* G6SensorKitPlugin */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA2744635CEE6B07A9D0D540 /* Build configuration list for PBXNativeTarget "G6SensorKitPlugin" */;
+			buildPhases = (
+				E9058A1C9AF9D65301B0E1A7 /* Headers */,
+				BB643305A8556C173C385223 /* Sources */,
+				60EEFA26278A7B5412BEB1FD /* Frameworks */,
+				9899C099755F7383E733FD99 /* Resources */,
+				E0D55C1C195528A4E3E9DCB6 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				ECAA1544CF52DDC9A0D3AEB5 /* PBXTargetDependency */,
+				86D66AB2F945DDF2885B05EE /* PBXTargetDependency */,
+			);
+			name = G6SensorKitPlugin;
+			productName = G6SensorKitPlugin;
+			productReference = 6FBE085ECE1CB31A2DF6DBC4 /* G6SensorKitPlugin.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		B542083FDC847D5F56897D1F /* G6SensorKitUI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3D967BE13714E53A8B10F1E9 /* Build configuration list for PBXNativeTarget "G6SensorKitUI" */;
+			buildPhases = (
+				ADF7F3947A83064D9319DEA9 /* Headers */,
+				8328F5EED51860A2561CA27D /* Sources */,
+				E1763268500E724F8C58343A /* Frameworks */,
+				1CE82AD01FBC9AC4A826E286 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				90CB82496A69CA2A24552D69 /* PBXTargetDependency */,
+			);
+			name = G6SensorKitUI;
+			productName = G6SensorKitUI;
+			productReference = 106822D6689DE79FC4CE356E /* G6SensorKitUI.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		F618E0794571356D35BC0EE5 /* G6SensorKit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DCDBAE81D2D4186AA6FD6E68 /* Build configuration list for PBXNativeTarget "G6SensorKit" */;
+			buildPhases = (
+				B48FA6ADF28E27B4B55C0A71 /* Headers */,
+				C9297C9F2E8CCB32DCC34FCB /* Sources */,
+				052904EF67570983C198C9EE /* Frameworks */,
+				DC245C524A46DFD063424B79 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = G6SensorKit;
+			packageProductDependencies = (
+				1AB75B487FA73D8553084DA2 /* G6SensorCore */,
+			);
+			productName = G6SensorKit;
+			productReference = 0411DD73A1DA9BD464AD782C /* G6SensorKit.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		12408E9B61407DEB2E54111D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+			};
+			buildConfigurationList = 02A4E078F8EE0A7EEB61CB28 /* Build configuration list for PBXProject "G6SensorKit" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D9C84E3042484468F5542A95;
+			minimizedProjectReferenceProxies = 0;
+			packageReferences = (
+				4109A49294D16AF8D473CDFA /* XCLocalSwiftPackageReference "." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = AA2050DB3EE1D7F75CF79C68 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F618E0794571356D35BC0EE5 /* G6SensorKit */,
+				B542083FDC847D5F56897D1F /* G6SensorKitUI */,
+				6731AFC096339FA82A1DF5B3 /* G6SensorKitPlugin */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1CE82AD01FBC9AC4A826E286 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				12F66D149347B1A993D71044 /* Localizable.xcstrings in Resources */,
+				55069471F5F6E5C422338F01 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9899C099755F7383E733FD99 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DC245C524A46DFD063424B79 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				91F3818D128916FE27D56ABF /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8328F5EED51860A2561CA27D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				62E6CBB0A78B9D0063237C76 /* G6CGMManager+UI.swift in Sources */,
+				0EB2F0CF16D4CF09F4DB61C5 /* G6UICoordinator.swift in Sources */,
+				435699F738EF47CF2E51549C /* LocalizedString.swift in Sources */,
+				34BBF8EDD9A8E8850A71A63D /* G6ActivityViewController.swift in Sources */,
+				A4DDFBB4474DCDA2137EAFFD /* G6ApplySensorViews.swift in Sources */,
+				7D156DB76900796D86C9DF03 /* G6CalibrationGuideView.swift in Sources */,
+				4B22132EF4B417308B866F87 /* G6DetailViews.swift in Sources */,
+				4A49484707FC951F21B84AAD /* G6Graphics.swift in Sources */,
+				54C1B5EEA9B89DC6B19CEE8C /* G6OnboardingViews.swift in Sources */,
+				CBCF97723A1D9B877EEB204B /* G6ReadingDetailView.swift in Sources */,
+				3E3E513B7ECC7FA49682ED70 /* G6SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BB643305A8556C173C385223 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				733130EF04A16F3EFDD251D5 /* G6SensorKitPlugin.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C9297C9F2E8CCB32DCC34FCB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				556E76473DCE38629E5ABF95 /* G6Alert.swift in Sources */,
+				579620D8CEC32A4C85289249 /* G6AlertEvaluator.swift in Sources */,
+				CF5564FAA05BAC83E21A7C23 /* G6CGMManager.swift in Sources */,
+				88790DE6204FDB74B1B00B2C /* G6CGMManagerState.swift in Sources */,
+				CE1F7436FC0FBC79DD1042F2 /* G6ShareCredentialStore.swift in Sources */,
+				05C0A0DEE13910534D1CA9FA /* G6SimulatedSession.swift in Sources */,
+				8817425A14772FC454B373B7 /* HKUnit.swift in Sources */,
+				9B59F7E5E6EBD2F2B3B52CD4 /* LocalizedString.swift in Sources */,
+				8E46332BA17044CDD2FDB1D8 /* Locked.swift in Sources */,
+				A09553CBB20120D6F0AA175E /* OSLog.swift in Sources */,
+				4B818FABA9E5D6B9304865CF /* TimeInterval.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		86D66AB2F945DDF2885B05EE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = G6SensorKitUI;
+			target = B542083FDC847D5F56897D1F /* G6SensorKitUI */;
+			targetProxy = 9FF41AE47971A56F63B99A29 /* PBXContainerItemProxy */;
+		};
+		90CB82496A69CA2A24552D69 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = G6SensorKit;
+			target = F618E0794571356D35BC0EE5 /* G6SensorKit */;
+			targetProxy = FF7E4746B17C1189DCBF15FA /* PBXContainerItemProxy */;
+		};
+		ECAA1544CF52DDC9A0D3AEB5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = G6SensorKit;
+			target = F618E0794571356D35BC0EE5 /* G6SensorKit */;
+			targetProxy = F82C12F15596125EDA63E63E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		111D4C2197811446F1FAAFC6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		1FA0478B051C43E6C13730C5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)",
+				);
+				INFOPLIST_FILE = G6SensorKitUI/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscout.G6SensorKitUI;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		25A406D99E2CE72AA8ABA581 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		3CC8D5863C1AFF97A358B6B9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)",
+				);
+				INFOPLIST_FILE = G6SensorKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscout.G6SensorKit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		8DC54C689F584B2D7EE713A0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)",
+				);
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = G6SensorKitPlugin/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscout.G6SensorKitPlugin;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+				WRAPPER_EXTENSION = loopplugin;
+			};
+			name = Debug;
+		};
+		A297006929C97B5BDD0EFB4C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)",
+				);
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = G6SensorKitPlugin/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscout.G6SensorKitPlugin;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+				WRAPPER_EXTENSION = loopplugin;
+			};
+			name = Release;
+		};
+		A5945F4595F55B6E07A019F6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)",
+				);
+				INFOPLIST_FILE = G6SensorKitUI/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscout.G6SensorKitUI;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		BF8E5B77C18DE8B9640635DF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)",
+				);
+				INFOPLIST_FILE = G6SensorKit/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscout.G6SensorKit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		02A4E078F8EE0A7EEB61CB28 /* Build configuration list for PBXProject "G6SensorKit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				25A406D99E2CE72AA8ABA581 /* Debug */,
+				111D4C2197811446F1FAAFC6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3D967BE13714E53A8B10F1E9 /* Build configuration list for PBXNativeTarget "G6SensorKitUI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A5945F4595F55B6E07A019F6 /* Release */,
+				1FA0478B051C43E6C13730C5 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA2744635CEE6B07A9D0D540 /* Build configuration list for PBXNativeTarget "G6SensorKitPlugin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A297006929C97B5BDD0EFB4C /* Release */,
+				8DC54C689F584B2D7EE713A0 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DCDBAE81D2D4186AA6FD6E68 /* Build configuration list for PBXNativeTarget "G6SensorKit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3CC8D5863C1AFF97A358B6B9 /* Release */,
+				BF8E5B77C18DE8B9640635DF /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		4109A49294D16AF8D473CDFA /* XCLocalSwiftPackageReference "." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1AB75B487FA73D8553084DA2 /* G6SensorCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = G6SensorCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 12408E9B61407DEB2E54111D /* Project object */;
+}

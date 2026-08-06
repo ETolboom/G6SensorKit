@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  core-tests:
+    name: G6SensorCore unit tests
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: swift test --enable-code-coverage
+
+  secret-hygiene:
+    name: Secret hygiene
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail on hardcoded credentials
+        run: |
+          # Credentials must come from the Keychain at runtime; nothing
+          # sensitive belongs in the repository.
+          if grep -rIn --exclude-dir=.git --exclude-dir=.build \
+               -E '(api[_-]?key|apiKey|password|secret|token)[[:space:]]*=[[:space:]]*"[^"]{8,}"' \
+               -- Sources G6SensorKit G6SensorKitUI G6SensorKitPlugin Apps; then
+            echo "::error::Possible hardcoded credential."
+            exit 1
+          fi

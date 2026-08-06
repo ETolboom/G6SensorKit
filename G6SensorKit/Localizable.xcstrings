@@ -1,0 +1,94 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Sensor expires in 24 hours": {
+      "extractionState": "manual",
+      "comment": "Alert title for sensor expiring in a day"
+    },
+    "Sensor expires in 2 hours": {
+      "extractionState": "manual",
+      "comment": "Alert title for sensor expiring soon"
+    },
+    "Sensor session ended": {
+      "extractionState": "manual",
+      "comment": "Alert title for expired sensor"
+    },
+    "Sensor failed": {
+      "extractionState": "manual",
+      "comment": "Alert title for failed sensor"
+    },
+    "No sensor readings": {
+      "extractionState": "manual",
+      "comment": "Alert title for signal loss"
+    },
+    "Calibration needed": {
+      "extractionState": "manual",
+      "comment": "Alert title for calibration request"
+    },
+    "Transmitter expiring soon": {
+      "extractionState": "manual",
+      "comment": "Alert title for a transmitter nearing end of life"
+    },
+    "Transmitter expired": {
+      "extractionState": "manual",
+      "comment": "Alert title for an expired transmitter"
+    },
+    "Your sensor session ends in about 24 hours. Plan to have a new sensor ready.": {
+      "extractionState": "manual",
+      "comment": "Alert body for sensor expiring in a day"
+    },
+    "Your sensor session ends in about 2 hours. Change your sensor soon to avoid a gap in readings.": {
+      "extractionState": "manual",
+      "comment": "Alert body for sensor expiring soon"
+    },
+    "Your sensor session has ended and no new readings will arrive. Start a new sensor when you are ready.": {
+      "extractionState": "manual",
+      "comment": "Alert body for expired sensor"
+    },
+    "Your sensor stopped working and is not sending readings. Remove it and start a new sensor. Check your glucose with a fingerstick meter in the meantime.": {
+      "extractionState": "manual",
+      "comment": "Alert body for failed sensor"
+    },
+    "No readings have arrived for 20 minutes. Keep your phone near your transmitter. If this continues, check your glucose with a fingerstick meter.": {
+      "extractionState": "manual",
+      "comment": "Alert body for signal loss"
+    },
+    "Your transmitter is asking for a fingerstick calibration to keep readings accurate.": {
+      "extractionState": "manual",
+      "comment": "Alert body for calibration request"
+    },
+    "Your transmitter reaches the end of its life soon. Once it does, your current sensor keeps running but you will not be able to start a new one. Order a replacement now.": {
+      "extractionState": "manual",
+      "comment": "Alert body for a transmitter nearing end of life"
+    },
+    "Your transmitter has reached the end of its life. It cannot start a new sensor session. You need a new transmitter to keep using this app for glucose readings.": {
+      "extractionState": "manual",
+      "comment": "Alert body for an expired transmitter"
+    },
+    "OK": {
+      "extractionState": "manual",
+      "comment": "Alert acknowledgment button label"
+    },
+    "Dexcom G6 / ONE": {
+      "extractionState": "manual",
+      "comment": "Title for the G6SensorKit CGM manager"
+    },
+    "This transmitter reached the end of its %d-day life on %@ and can no longer start a sensor session. A new transmitter is needed.": {
+      "extractionState": "manual",
+      "comment": "Explanation when an expired transmitter refuses a session start (1: lifetime days, 2: expiry date)"
+    },
+    "The transmitter did not accept the start time. Try starting the sensor again.": {
+      "extractionState": "manual",
+      "comment": "Session start refused as stale"
+    },
+    "The transmitter did not start a sensor session. Try again, and check that the transmitter is clicked firmly into the sensor holder.": {
+      "extractionState": "manual",
+      "comment": "Session start refused for an unclear reason"
+    },
+    "Ended because the transmitter was replaced": {
+      "extractionState": "manual",
+      "comment": "Reason recorded when a session ends due to a transmitter swap"
+    }
+  },
+  "version": "1.0"
+}
