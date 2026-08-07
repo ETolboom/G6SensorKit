@@ -210,6 +210,9 @@ public class G6UICoordinator: UINavigationController, CGMManagerOnboarding, Comp
     private func nextScreen(after screen: G6UIScreen) -> G6UIScreen? {
         switch flowMode {
         case .onboarding:
+            if screen == .pairing, !shouldShowWarmup {
+                return nil
+            }
             return screen.next
         case .replacingTransmitter:
             // No introduction, and no placement guide: the sensor is already
@@ -217,10 +220,21 @@ public class G6UICoordinator: UINavigationController, CGMManagerOnboarding, Comp
             switch screen {
             case .transmitterIDEntry: return .sensorCodeEntry
             case .sensorCodeEntry: return .pairing
-            case .pairing: return .warmup
+            case .pairing: return shouldShowWarmup ? .warmup : nil
             default: return nil
             }
         }
+    }
+
+    /// Warm-up only deserves a screen when the sensor is actually in it.
+    /// Adopting a session that has been running for hours — what happens when
+    /// someone moves a live sensor across from another app — must not
+    /// announce a warm-up that finished long ago.
+    private var shouldShowWarmup: Bool {
+        guard let state = cgmManager?.state else {
+            return false
+        }
+        return state.isInWarmup || state.hasPendingSessionStart
     }
 
     private func finishFlow() {

@@ -549,10 +549,6 @@
       "extractionState": "manual",
       "comment": "Warm-up callout body about dosing safety"
     },
-    "Expected to finish at %@": {
-      "extractionState": "manual",
-      "comment": "Warm-up completion time (1: time)"
-    },
     "Trend": {
       "extractionState": "manual",
       "comment": "Reading detail label for trend"
@@ -784,6 +780,18 @@
     "“Dexcom”, “G6”, and “ONE” are trademarks of Dexcom, Inc., used here only to describe which devices are compatible. This app is not made by or endorsed by Dexcom.": {
       "extractionState": "manual",
       "comment": "Trademark attribution footer"
+    },
+    "Warm-up is finished": {
+      "extractionState": "manual",
+      "comment": "Warm-up screen heading once warm-up has completed"
+    },
+    "Readings will appear as they arrive from the transmitter, about every 5 minutes.": {
+      "extractionState": "manual",
+      "comment": "Explanation shown once warm-up has completed"
+    },
+    "Expected to finish at %1$@, about %2$d minutes from now": {
+      "extractionState": "manual",
+      "comment": "Warm-up completion time (1: time, 2: minutes remaining)"
     }
   },
   "version": "1.0"

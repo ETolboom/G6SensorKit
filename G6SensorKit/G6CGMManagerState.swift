@@ -273,6 +273,18 @@ public struct G6CGMManagerState: RawRepresentable {
         return sensorStartDate?.addingTimeInterval(warmupPeriod)
     }
 
+    /// A session start is queued but the transmitter has not acknowledged it
+    /// yet, so there is no start date to judge warm-up by — it is about to
+    /// begin rather than already running.
+    public var hasPendingSessionStart: Bool {
+        return pendingCommands.contains { raw in
+            if case .startSensor? = Command(rawValue: raw) {
+                return true
+            }
+            return false
+        }
+    }
+
     /// The device model implied by the transmitter ID prefix. G6 transmitters
     /// use `8…`; Dexcom ONE uses `5…` or `C…`.
     public var deviceModel: String {

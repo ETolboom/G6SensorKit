@@ -404,6 +404,39 @@ final class G6PairingViewModel: ObservableObject, G6CGMManagerObserver {
     }
 }
 
+/// Holds off auto-lock while a screen is waiting on the transmitter.
+///
+/// A transmitter advertises about once every five minutes, so the default
+/// auto-lock will usually fire before the first connection lands and the user
+/// is left looking at a dark screen with no idea whether it worked. Counted
+/// rather than a plain flag, so overlapping holders cannot release each
+/// other's, and the previous value is restored on the last release in case
+/// the host app was holding it for its own reasons.
+enum G6ScreenWakeLock {
+    private static var holders = 0
+    private static var previousValue = false
+
+    static func hold() {
+        dispatchPrecondition(condition: .onQueue(.main))
+        if holders == 0 {
+            previousValue = UIApplication.shared.isIdleTimerDisabled
+        }
+        holders += 1
+        UIApplication.shared.isIdleTimerDisabled = true
+    }
+
+    static func release() {
+        dispatchPrecondition(condition: .onQueue(.main))
+        guard holders > 0 else {
+            return
+        }
+        holders -= 1
+        if holders == 0 {
+            UIApplication.shared.isIdleTimerDisabled = previousValue
+        }
+    }
+}
+
 struct G6PairingView: View {
     @StateObject private var viewModel: G6PairingViewModel
     let didContinue: () -> Void
@@ -479,6 +512,8 @@ struct G6PairingView: View {
             // for a connection that may never have happened.
             G6ContinueButton(isEnabled: viewModel.isPaired, action: didContinue)
         }
+        .onAppear { G6ScreenWakeLock.hold() }
+        .onDisappear { G6ScreenWakeLock.release() }
     }
 
     @ViewBuilder
@@ -510,6 +545,12 @@ struct G6WarmupView: View {
     let manager: G6CGMManager?
     let didFinish: () -> Void
 
+    /// Warm-up can finish while this screen is open — an Anubis transmitter
+    /// only takes 50 minutes — so the copy is recomputed rather than frozen
+    /// at first render.
+    @State private var now = Date()
+    private let tick = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
+
     private var warmupMinutes: Int {
         guard let state = manager?.state else {
             return Int(G6CGMManagerState.stockWarmupPeriod / 60)
@@ -517,17 +558,43 @@ struct G6WarmupView: View {
         return Int(state.warmupPeriod / 60)
     }
 
+    /// Nil when the transmitter has not reported a start time yet, which is
+    /// the normal case for a session that was only just requested.
+    private var endDate: Date? {
+        return manager?.state.warmupEndDate
+    }
+
+    private var isFinished: Bool {
+        guard let endDate = endDate else {
+            return false
+        }
+        return endDate <= now
+    }
+
+    private var minutesRemaining: Int? {
+        guard let endDate = endDate, endDate > now else {
+            return nil
+        }
+        return max(1, Int((endDate.timeIntervalSince(now) / 60).rounded(.up)))
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    Text(LocalizedString("Your sensor is warming up", comment: "Warm-up screen heading"))
+                    Text(isFinished
+                         ? LocalizedString("Warm-up is finished", comment: "Warm-up screen heading once warm-up has completed")
+                         : LocalizedString("Your sensor is warming up", comment: "Warm-up screen heading"))
                         .font(.title2.bold())
 
-                    Text(String(
-                        format: LocalizedString("Warm-up takes about %d minutes. You will not get any glucose readings until it finishes.", comment: "Warm-up duration explanation (1: minutes)"),
-                        warmupMinutes
-                    ))
+                    if isFinished {
+                        Text(LocalizedString("Readings will appear as they arrive from the transmitter, about every 5 minutes.", comment: "Explanation shown once warm-up has completed"))
+                    } else {
+                        Text(String(
+                            format: LocalizedString("Warm-up takes about %d minutes. You will not get any glucose readings until it finishes.", comment: "Warm-up duration explanation (1: minutes)"),
+                            warmupMinutes
+                        ))
+                    }
 
                     G6CalloutBox(
                         symbolName: "exclamationmark.triangle.fill",
@@ -536,11 +603,14 @@ struct G6WarmupView: View {
                         body: LocalizedString("Do not make insulin decisions from the first readings after warm-up, or from readings that look wrong for how you feel. Use a fingerstick meter instead, and follow your care team's guidance.", comment: "Warm-up callout body about dosing safety")
                     )
 
-                    if let endDate = manager?.state.warmupEndDate {
+                    // Only ever shown for a time still ahead of us: a finish
+                    // time in the past reads as a fault in the app.
+                    if let endDate = endDate, let minutesRemaining = minutesRemaining {
                         Label(
                             String(
-                                format: LocalizedString("Expected to finish at %@", comment: "Warm-up completion time (1: time)"),
-                                endDate.formatted(date: .omitted, time: .shortened)
+                                format: LocalizedString("Expected to finish at %1$@, about %2$d minutes from now", comment: "Warm-up completion time (1: time, 2: minutes remaining)"),
+                                endDate.formatted(date: .omitted, time: .shortened),
+                                minutesRemaining
                             ),
                             systemImage: "clock"
                         )
@@ -554,5 +624,6 @@ struct G6WarmupView: View {
 
             G6ContinueButton(title: LocalizedString("Done", comment: "Warm-up screen finish button"), action: didFinish)
         }
+        .onReceive(tick) { now = $0 }
     }
 }
