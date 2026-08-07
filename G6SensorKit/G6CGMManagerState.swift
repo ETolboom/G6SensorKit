@@ -95,6 +95,42 @@ public struct G6CGMManagerState: RawRepresentable {
     /// calibration must not vanish if the app is relaunched meanwhile.
     public var pendingCommands: [Command.RawValue]
 
+    // MARK: - Battery
+
+    /// Hundredths of a volt (310 is 3.10 V).
+    public var batteryVoltageA: UInt16?
+    public var batteryVoltageB: UInt16?
+    public var batteryResistance: UInt16?
+    public var batteryRuntimeDays: Int?
+    public var batteryTemperature: Int?
+    public var lastBatteryReadDate: Date?
+
+    public var batteryVoltageAMillivolts: Int? {
+        return batteryVoltageA.map { Int($0) * 10 }
+    }
+
+    public var batteryVoltageBMillivolts: Int? {
+        return batteryVoltageB.map { Int($0) * 10 }
+    }
+
+    /// Battery B gives out first.
+    public static let batteryLowMillivolts = 2750
+    public static let batteryVeryLowMillivolts = 2700
+
+    public var isBatteryLow: Bool {
+        guard let millivolts = batteryVoltageBMillivolts else {
+            return false
+        }
+        return millivolts <= Self.batteryLowMillivolts
+    }
+
+    public var isBatteryVeryLow: Bool {
+        guard let millivolts = batteryVoltageBMillivolts else {
+            return false
+        }
+        return millivolts <= Self.batteryVeryLowMillivolts
+    }
+
     public init(
         transmitterID: String,
         peripheralIdentifier: UUID? = nil,
@@ -161,6 +197,13 @@ public struct G6CGMManagerState: RawRepresentable {
             lastSessionStartFailure: rawValue["lastSessionStartFailure"] as? String,
             algorithmStateRawValue: (rawValue["algorithmState"] as? Int).map { UInt8(clamping: $0) }
         )
+
+        batteryVoltageA = (rawValue["batteryVoltageA"] as? Int).map { UInt16(clamping: $0) }
+        batteryVoltageB = (rawValue["batteryVoltageB"] as? Int).map { UInt16(clamping: $0) }
+        batteryResistance = (rawValue["batteryResistance"] as? Int).map { UInt16(clamping: $0) }
+        batteryRuntimeDays = rawValue["batteryRuntimeDays"] as? Int
+        batteryTemperature = rawValue["batteryTemperature"] as? Int
+        lastBatteryReadDate = rawValue["lastBatteryReadDate"] as? Date
     }
 
     public var rawValue: RawValue {
@@ -195,6 +238,13 @@ public struct G6CGMManagerState: RawRepresentable {
         }
         raw["lastSessionStartFailure"] = lastSessionStartFailure
         raw["algorithmState"] = algorithmStateRawValue.map { Int($0) }
+
+        raw["batteryVoltageA"] = batteryVoltageA.map { Int($0) }
+        raw["batteryVoltageB"] = batteryVoltageB.map { Int($0) }
+        raw["batteryResistance"] = batteryResistance.map { Int($0) }
+        raw["batteryRuntimeDays"] = batteryRuntimeDays
+        raw["batteryTemperature"] = batteryTemperature
+        raw["lastBatteryReadDate"] = lastBatteryReadDate
 
         return raw
     }
@@ -376,6 +426,12 @@ extension G6CGMManagerState: Equatable {
             && lhs.setupStep == rhs.setupStep
             && lhs.lastSessionStartFailure == rhs.lastSessionStartFailure
             && lhs.algorithmStateRawValue == rhs.algorithmStateRawValue
+            && lhs.batteryVoltageA == rhs.batteryVoltageA
+            && lhs.batteryVoltageB == rhs.batteryVoltageB
+            && lhs.batteryResistance == rhs.batteryResistance
+            && lhs.batteryRuntimeDays == rhs.batteryRuntimeDays
+            && lhs.batteryTemperature == rhs.batteryTemperature
+            && lhs.lastBatteryReadDate == rhs.lastBatteryReadDate
             && NSArray(array: lhs.pendingCommands) == NSArray(array: rhs.pendingCommands)
     }
 }

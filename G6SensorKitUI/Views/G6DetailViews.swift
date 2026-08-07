@@ -9,6 +9,7 @@
 //
 
 import SwiftUI
+import HealthKit
 import LoopKit
 import LoopKitUI
 import G6SensorKit
@@ -25,8 +26,44 @@ struct G6CalibrationView: View {
     @State private var validationMessage: String?
     @State private var showingGuide = false
 
+    @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
+
     private static let minimumMgDL: Double = 40
     private static let maximumMgDL: Double = 400
+
+    private var unit: HKUnit {
+        return displayGlucosePreference.unit
+    }
+
+    private var usesDecimals: Bool {
+        return unit != .milligramsPerDeciliter
+    }
+
+    private var decimalSeparator: String {
+        return Locale.current.decimalSeparator ?? "."
+    }
+
+    private func quantity(fromMgDL value: Double) -> HKQuantity {
+        return HKQuantity(unit: .milligramsPerDeciliter, doubleValue: value)
+    }
+
+    private func sanitize(_ input: String) -> String {
+        guard usesDecimals else {
+            return String(input.filter(\.isNumber).prefix(3))
+        }
+
+        var seenSeparator = false
+        var result = ""
+        for character in input {
+            if character.isNumber {
+                result.append(character)
+            } else if String(character) == decimalSeparator, !seenSeparator {
+                seenSeparator = true
+                result.append(character)
+            }
+        }
+        return String(result.prefix(5))
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -47,14 +84,17 @@ struct G6CalibrationView: View {
                         }
                     }
 
-                    TextField(LocalizedString("mg/dL", comment: "Calibration value text field placeholder"), text: $entry)
-                        .keyboardType(.numberPad)
+                    TextField(unit.localizedShortUnitString, text: $entry)
+                        .keyboardType(usesDecimals ? .decimalPad : .numberPad)
                         .font(.title3.monospaced())
                         .padding()
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(10)
                         .onChange(of: entry) { newValue in
-                            entry = String(newValue.filter(\.isNumber).prefix(3))
+                            let sanitized = sanitize(newValue)
+                            if sanitized != newValue {
+                                entry = sanitized
+                            }
                             validationMessage = nil
                         }
 
@@ -90,21 +130,26 @@ struct G6CalibrationView: View {
     }
 
     private func submit() {
-        guard let value = Double(entry) else {
+        let normalized = entry.replacingOccurrences(of: decimalSeparator, with: ".")
+
+        guard let entered = Double(normalized) else {
             validationMessage = LocalizedString("Enter a number.", comment: "Validation message for non-numeric calibration entry")
             return
         }
 
-        guard (Self.minimumMgDL...Self.maximumMgDL).contains(value) else {
+        let valueMgDL = HKQuantity(unit: unit, doubleValue: entered)
+            .doubleValue(for: .milligramsPerDeciliter)
+
+        guard (Self.minimumMgDL...Self.maximumMgDL).contains(valueMgDL) else {
             validationMessage = String(
-                format: LocalizedString("Calibrations must be between %d and %d mg/dL. If your meter reads outside that range, treat it and follow your care team's guidance instead of calibrating.", comment: "Validation message for out-of-range calibration (1: minimum, 2: maximum)"),
-                Int(Self.minimumMgDL),
-                Int(Self.maximumMgDL)
+                format: LocalizedString("Calibrations must be between %1$@ and %2$@. If your meter reads outside that range, treat it and follow your care team's guidance instead of calibrating.", comment: "Validation message for out-of-range calibration (1: minimum with unit, 2: maximum with unit)"),
+                displayGlucosePreference.format(quantity(fromMgDL: Self.minimumMgDL)),
+                displayGlucosePreference.format(quantity(fromMgDL: Self.maximumMgDL))
             )
             return
         }
 
-        cgmManager.enqueue(.calibrateSensor(toMgDL: value, at: Date()))
+        cgmManager.enqueue(.calibrateSensor(toMgDL: valueMgDL, at: Date()))
         didSubmit()
     }
 }
@@ -179,8 +224,57 @@ struct G6TransmitterDetailsView: View {
                     Text(LocalizedString("This transmitter reports an extended 180-day lifetime, which means it has been modified. Warm-up is shorter and you can choose how long sessions run.", comment: "Footer explaining Anubis detection"))
                 }
             }
+
+            batterySection
         }
         .listStyle(.insetGrouped)
+    }
+
+    @ViewBuilder
+    private var batterySection: some View {
+        if let voltageA = cgmManager.state.batteryVoltageAMillivolts,
+           let voltageB = cgmManager.state.batteryVoltageBMillivolts {
+            Section {
+                row(
+                    LocalizedString("Voltage A", comment: "Transmitter detail label for battery A"),
+                    String(format: LocalizedString("%d mV", comment: "Voltage in millivolts (1: millivolts)"), voltageA)
+                )
+                HStack {
+                    Text(LocalizedString("Voltage B", comment: "Transmitter detail label for battery B"))
+                    Spacer()
+                    Text(String(format: LocalizedString("%d mV", comment: "Voltage in millivolts (1: millivolts)"), voltageB))
+                        .foregroundColor(cgmManager.state.isBatteryLow ? .orange : .secondary)
+                }
+                if let resistance = cgmManager.state.batteryResistance {
+                    row(
+                        LocalizedString("Resistance", comment: "Transmitter detail label for battery resistance"),
+                        String(Int(resistance))
+                    )
+                }
+                if let temperature = cgmManager.state.batteryTemperature {
+                    row(
+                        LocalizedString("Temperature", comment: "Transmitter detail label for temperature"),
+                        String(format: LocalizedString("%d °C", comment: "Temperature in Celsius (1: degrees)"), temperature)
+                    )
+                }
+                if let read = cgmManager.state.lastBatteryReadDate {
+                    row(
+                        LocalizedString("Last checked", comment: "Transmitter detail label for last battery read"),
+                        read.formatted(date: .abbreviated, time: .shortened)
+                    )
+                }
+            } header: {
+                Text(LocalizedString("Battery", comment: "Transmitter details section header for battery"))
+            } footer: {
+                if cgmManager.state.isBatteryVeryLow {
+                    Text(LocalizedString("Voltage B is very low. This transmitter may stop sending readings at any time, even during a session. Replace it as soon as you can.", comment: "Footer shown when battery B is very low"))
+                } else if cgmManager.state.isBatteryLow {
+                    Text(LocalizedString("Voltage B is getting low. The transmitter should finish the sensor you are wearing, but order a replacement now.", comment: "Footer shown when battery B is low"))
+                } else {
+                    Text(LocalizedString("Battery B is the cell that runs down first and determines whether the transmitter can finish a session.", comment: "Footer explaining what battery B means"))
+                }
+            }
+        }
     }
 
     private func row(_ label: String, _ value: String) -> some View {

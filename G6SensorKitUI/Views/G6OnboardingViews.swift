@@ -404,14 +404,9 @@ final class G6PairingViewModel: ObservableObject, G6CGMManagerObserver {
     }
 }
 
-/// Holds off auto-lock while a screen is waiting on the transmitter.
-///
-/// A transmitter advertises about once every five minutes, so the default
-/// auto-lock will usually fire before the first connection lands and the user
-/// is left looking at a dark screen with no idea whether it worked. Counted
-/// rather than a plain flag, so overlapping holders cannot release each
-/// other's, and the previous value is restored on the last release in case
-/// the host app was holding it for its own reasons.
+/// Holds off auto-lock while a screen waits on the transmitter, which
+/// advertises only about every five minutes. Counted, and restores the
+/// previous value, so it does not clobber the host's own setting.
 enum G6ScreenWakeLock {
     private static var holders = 0
     private static var previousValue = false
@@ -545,9 +540,8 @@ struct G6WarmupView: View {
     let manager: G6CGMManager?
     let didFinish: () -> Void
 
-    /// Warm-up can finish while this screen is open — an Anubis transmitter
-    /// only takes 50 minutes — so the copy is recomputed rather than frozen
-    /// at first render.
+    /// Warm-up can finish while this screen is open, so the copy is
+    /// recomputed rather than frozen at first render.
     @State private var now = Date()
     private let tick = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
@@ -603,8 +597,6 @@ struct G6WarmupView: View {
                         body: LocalizedString("Do not make insulin decisions from the first readings after warm-up, or from readings that look wrong for how you feel. Use a fingerstick meter instead, and follow your care team's guidance.", comment: "Warm-up callout body about dosing safety")
                     )
 
-                    // Only ever shown for a time still ahead of us: a finish
-                    // time in the past reads as a fault in the app.
                     if let endDate = endDate, let minutesRemaining = minutesRemaining {
                         Label(
                             String(

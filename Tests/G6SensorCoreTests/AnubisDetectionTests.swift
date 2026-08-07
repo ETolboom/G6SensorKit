@@ -25,7 +25,7 @@ class AnubisDetectionTests: XCTestCase {
         XCTAssertFalse(message.isAnubis)
     }
 
-    /// Anubis-modded G6 reports 180 days. Mirrors xDrip4iOS's heuristic.
+    /// Anubis-modded G6 reports 180 days.
     func testAnubisG6ExpiryParsedAndIsAnubis() {
         let data = makeVersionRxPayload(expiryDays: 180)
         let message = TransmitterVersionRxMessage(data: data)!

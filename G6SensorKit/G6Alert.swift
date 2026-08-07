@@ -26,6 +26,9 @@ enum G6Alert: String, CaseIterable {
     case calibrationNeeded
     case transmitterExpiringSoon
     case transmitterExpired
+    case transmitterBatteryLow
+    case transmitterBatteryVeryLow
+    case lastSessionForTransmitter
 
     init?(rawValue: Alert.AlertIdentifier) {
         guard let match = Self.allCases.first(where: { $0.rawValue == rawValue }) else {
@@ -38,11 +41,21 @@ enum G6Alert: String, CaseIterable {
         return rawValue
     }
 
+    /// Replacement reminders are things to act on in your own time; alerts are
+    /// things that have already stopped, or are about to stop, your readings.
     var interruptionLevel: Alert.InterruptionLevel {
         switch self {
-        case .sensorExpiringSoon, .transmitterExpiringSoon:
+        case .sensorExpiringSoon,
+             .transmitterExpiringSoon,
+             .transmitterBatteryLow,
+             .lastSessionForTransmitter:
             return .active
-        case .sensorExpiringImminently, .sensorExpired, .signalLoss, .calibrationNeeded, .transmitterExpired:
+        case .sensorExpiringImminently,
+             .sensorExpired,
+             .signalLoss,
+             .calibrationNeeded,
+             .transmitterExpired,
+             .transmitterBatteryVeryLow:
             return .timeSensitive
         case .sensorFailed:
             return .critical
@@ -67,6 +80,12 @@ enum G6Alert: String, CaseIterable {
             return LocalizedString("Transmitter expiring soon", comment: "Alert title for a transmitter nearing end of life")
         case .transmitterExpired:
             return LocalizedString("Transmitter expired", comment: "Alert title for an expired transmitter")
+        case .transmitterBatteryLow:
+            return LocalizedString("Transmitter battery getting low", comment: "Alert title for a low transmitter battery")
+        case .transmitterBatteryVeryLow:
+            return LocalizedString("Transmitter battery very low", comment: "Alert title for a very low transmitter battery")
+        case .lastSessionForTransmitter:
+            return LocalizedString("Last session for this transmitter", comment: "Alert title when a transmitter cannot fit another full session")
         }
     }
 
@@ -88,6 +107,12 @@ enum G6Alert: String, CaseIterable {
             return LocalizedString("Your transmitter reaches the end of its life soon. Once it does, your current sensor keeps running but you will not be able to start a new one. Order a replacement now.", comment: "Alert body for a transmitter nearing end of life")
         case .transmitterExpired:
             return LocalizedString("Your transmitter has reached the end of its life. It cannot start a new sensor session. You need a new transmitter to keep using this app for glucose readings.", comment: "Alert body for an expired transmitter")
+        case .transmitterBatteryLow:
+            return LocalizedString("Your transmitter's battery is getting low. It should finish the sensor you are wearing, but order a replacement transmitter now so you are not caught out.", comment: "Alert body for a low transmitter battery")
+        case .transmitterBatteryVeryLow:
+            return LocalizedString("Your transmitter's battery is very low and it may stop sending readings at any time, even mid-session. Replace the transmitter as soon as you can, and check your glucose with a fingerstick meter if readings stop.", comment: "Alert body for a very low transmitter battery")
+        case .lastSessionForTransmitter:
+            return LocalizedString("Your transmitter does not have enough life left for another full sensor session after this one. Have a replacement transmitter ready before this sensor ends.", comment: "Alert body when a transmitter cannot fit another full session")
         }
     }
 

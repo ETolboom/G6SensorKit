@@ -7,8 +7,8 @@
 //  The 4-digit factory sensor code printed on the G6/ONE applicator maps to a
 //  pair of calibration parameters that are sent with the session-start
 //  command. The parameter values are protocol facts observable on the wire,
-//  cross-checked against the xDrip4iOS and xDrip+ (Android) projects'
-//  documented behavior. (No code from those projects is included here.)
+//  cross-checked against the xDrip4iOS and xDrip+ (Android) projects, which
+//  document rather than originate them. No code from either is included.
 //
 
 import Foundation

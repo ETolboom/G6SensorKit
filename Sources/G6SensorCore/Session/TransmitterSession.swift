@@ -6,16 +6,16 @@
 //  originally xDripG5, created by Nathan Racklyeft on 11/22/15.
 //  Copyright © 2015 Nathan Racklyeft. All rights reserved. (MIT License)
 //
-//  Adaptations (behavioral reference: xDrip4iOS — no code copied):
+//  Adaptations (behavioural reference: xDrip4iOS — no code copied):
 //  - Active/native mode ONLY: the passive "observe another app's session"
 //    path is removed by design. G6SensorKit owns the transmitter.
 //  - Per-connection flow follows the Firefly ordering: authenticate →
 //    bond if needed → subscribe control + backfill → time → pending
 //    commands (session stop / session start / calibrate / reset) →
-//    battery (when requested) → glucose → transmitter version (when
-//    requested) → backfill (when requested) → disconnect.
-//  - Backfill is actively requested for a caller-supplied window and
-//    validated against the acknowledgement's length/CRC before delivery.
+//    battery (when requested) → glucose → backfill request (when
+//    requested) → transmitter version → backfill decode → disconnect.
+//  - Backfill is actively requested for a caller-supplied window; the
+//    frames stream in behind the acknowledgement and are decoded last.
 //  - Pairing keep-alive window is 60 s, giving the user time to accept
 //    the iOS pairing prompt.
 //
@@ -133,8 +133,14 @@ public final class TransmitterSession: TransmitterConnectionDelegate {
     }
     private let lockedBackfillWindow: Locked<DateInterval?> = Locked(nil)
 
-    /// The backfill data buffer; confined to the connection's manager queue.
+    /// Frames arrive on the manager queue while the drain waits on the
+    /// session queue, so both go through `backfillLock`.
     private var backfillBuffer: GlucoseBackfillFrameBuffer?
+    private let backfillLock = NSCondition()
+
+    /// Top-up wait at the end of the cycle; must stay inside the ~15s the
+    /// transmitter holds the link open.
+    static let backfillFrameTimeout: TimeInterval = 5
 
     private let log = OSLog(category: "TransmitterSession")
 
@@ -159,6 +165,28 @@ public final class TransmitterSession: TransmitterConnectionDelegate {
     public func stop() {
         connection.stayConnected = false
         connection.disconnect()
+    }
+
+    /// Points this session at a different transmitter, keeping the existing
+    /// connection and its central manager.
+    public func retarget(id newID: String) {
+        log.default("Retargeting session to transmitter %{public}@", newID)
+
+        connection.stayConnected = false
+        connection.disconnect()
+
+        self.id = TransmitterID(id: newID)
+        connection.peripheralIdentifier = nil
+
+        backfillLock.lock()
+        backfillBuffer = nil
+        backfillLock.unlock()
+
+        requestedBackfillWindow = nil
+        shouldReadBattery = true
+        shouldReadTransmitterVersion = true
+
+        start()
     }
 
     public var peripheralIdentifier: UUID? {
@@ -275,6 +303,19 @@ public final class TransmitterSession: TransmitterConnectionDelegate {
                 self.log.debug("Reading glucose")
                 let glucoseMessage = try peripheral.readGlucose()
 
+                // Requested before the remaining reads so the frames stream
+                // in behind them rather than stalling the connection.
+                var backfillAck: GlucoseBackfillRxMessage?
+                if let window = self.requestedBackfillWindow,
+                   CalibrationState(rawValue: glucoseMessage.glucose.state).hasReliableGlucose {
+                    self.log.debug("Requesting backfill for %{public}@", String(describing: window))
+                    do {
+                        backfillAck = try self.requestBackfill(window: window, on: peripheral, activationDate: activationDate)
+                    } catch let error {
+                        self.log.error("Backfill request failed: %{public}@", String(describing: error))
+                    }
+                }
+
                 self.log.debug("Reading calibration data")
                 let calibrationMessage = try? peripheral.readCalibrationData()
 
@@ -305,10 +346,9 @@ public final class TransmitterSession: TransmitterConnectionDelegate {
                     self.delegate?.transmitterSession(self, didRead: glucose)
                 }
 
-                if let window = self.requestedBackfillWindow, glucose.state.hasReliableGlucose {
-                    self.log.debug("Requesting backfill for %{public}@", String(describing: window))
+                if let ack = backfillAck {
                     do {
-                        try self.performBackfill(window: window, on: peripheral, timeMessage: timeMessage, activationDate: activationDate)
+                        try self.drainBackfill(ack: ack, timeMessage: timeMessage, activationDate: activationDate)
                         self.requestedBackfillWindow = nil
                     } catch let error {
                         self.log.error("Backfill failed: %{public}@", String(describing: error))
@@ -366,13 +406,19 @@ public final class TransmitterSession: TransmitterConnectionDelegate {
             return
         }
 
+        backfillLock.lock()
+        defer {
+            backfillLock.broadcast()
+            backfillLock.unlock()
+        }
+
         if response[0] == 1 {
-            log.info("Starting new backfill buffer with ID %d", response[1])
+            log.default("Starting new backfill buffer with ID %d", response[1])
 
             self.backfillBuffer = GlucoseBackfillFrameBuffer(identifier: response[1])
         }
 
-        log.info("appending to backfillBuffer: %@", response.hexadecimalString)
+        log.debug("Appending backfill frame: %{public}@", response.hexadecimalString)
 
         self.backfillBuffer?.append(response)
     }
@@ -380,9 +426,31 @@ public final class TransmitterSession: TransmitterConnectionDelegate {
 
     // MARK: - Backfill
 
-    /// Requests, assembles and validates a backfill for `window`, delivering
-    /// the result to the delegate. Runs on the peripheral's session queue.
-    private func performBackfill(window: DateInterval, on peripheral: PeripheralManager, timeMessage: TransmitterTimeRxMessage, activationDate: Date) throws {
+    /// Waits for the frame stream that follows the acknowledgement.
+    private func awaitBackfillFrames(expecting ack: GlucoseBackfillRxMessage) -> GlucoseBackfillFrameBuffer? {
+        let deadline = Date(timeIntervalSinceNow: Self.backfillFrameTimeout)
+
+        backfillLock.lock()
+        defer { backfillLock.unlock() }
+
+        while true {
+            if let buffer = backfillBuffer, buffer.count >= Int(ack.bufferLength) {
+                return buffer
+            }
+
+            guard backfillLock.wait(until: deadline) else {
+                return backfillBuffer
+            }
+        }
+    }
+
+    /// Sends a backfill request for `window` and returns the transmitter's
+    /// acknowledgement. The frames themselves arrive afterwards, on the
+    /// backfill characteristic; see `drainBackfill`.
+    ///
+    /// Returns nil when the transmitter reports nothing stored for the window,
+    /// which is an empty result rather than a failure.
+    private func requestBackfill(window: DateInterval, on peripheral: PeripheralManager, activationDate: Date) throws -> GlucoseBackfillRxMessage? {
         // Pad the window by ±5 minutes so boundary readings aren't lost.
         let padding = TimeInterval(minutes: 5)
         let startTime = UInt32(max(0, window.start.addingTimeInterval(-padding).timeIntervalSince(activationDate)))
@@ -392,23 +460,48 @@ public final class TransmitterSession: TransmitterConnectionDelegate {
             throw TransmitterError.controlError("Invalid backfill window \(window)")
         }
 
+        backfillLock.lock()
         backfillBuffer = nil
+        backfillLock.unlock()
 
         let ack = try peripheral.requestBackfill(startTime: startTime, endTime: endTime)
 
-        guard let backfillBuffer = backfillBuffer else {
-            throw TransmitterError.observationError("Backfill acknowledged but no data frames received")
+        log.default("Backfill acknowledged: status %{public}@, backfillStatus %{public}@, id %{public}@, range %{public}@-%{public}@, length %{public}@, crc %{public}@",
+                    String(ack.status), String(ack.backfillStatus), String(ack.identifier),
+                    String(ack.startTime), String(ack.endTime),
+                    String(ack.bufferLength), String(format: "%04x", ack.bufferCRC))
+
+        // Nothing stored for the window: an empty result, not a failure.
+        guard ack.bufferLength > 0 else {
+            log.default("Transmitter reported no backfill data for the requested window")
+            return nil
         }
 
-        guard ack.bufferLength == backfillBuffer.count else {
-            throw TransmitterError.observationError("Backfill expected buffer length \(ack.bufferLength), but was \(backfillBuffer.count)")
+        return ack
+    }
+
+    /// Decodes what arrived and delivers it. `append` rejects out-of-sequence
+    /// frames, so a short buffer is a prefix rather than one with holes, and a
+    /// partial recovery is delivered instead of discarded.
+    private func drainBackfill(ack: GlucoseBackfillRxMessage, timeMessage: TransmitterTimeRxMessage, activationDate: Date) throws {
+        guard let buffer = awaitBackfillFrames(expecting: ack), buffer.count > 0 else {
+            throw TransmitterError.observationError(
+                "Backfill acknowledged \(ack.bufferLength) bytes but no frames arrived")
         }
 
-        guard ack.bufferCRC == backfillBuffer.crc16 else {
-            throw TransmitterError.observationError("Backfill expected CRC \(String(format: "%04x", ack.bufferCRC)), but was \(String(format: "%04x", backfillBuffer.crc16))")
+        let complete = buffer.count == Int(ack.bufferLength)
+
+        if complete {
+            guard ack.bufferCRC == buffer.crc16 else {
+                throw TransmitterError.observationError("Backfill expected CRC \(String(format: "%04x", ack.bufferCRC)), but was \(String(format: "%04x", buffer.crc16))")
+            }
+        } else {
+            // CRC covers the whole buffer, so it cannot check a prefix.
+            log.default("Backfill incomplete: %{public}@ of %{public}@ bytes; delivering what arrived",
+                        String(buffer.count), String(ack.bufferLength))
         }
 
-        let glucose = backfillBuffer.glucose.map {
+        let glucose = buffer.glucose.map {
             Glucose(transmitterID: id.id, status: ack.status, glucoseMessage: $0, timeMessage: timeMessage, activationDate: activationDate)
         }
 
@@ -416,15 +509,19 @@ public final class TransmitterSession: TransmitterConnectionDelegate {
             return
         }
 
-        guard glucose.first!.glucoseMessage.timestamp == ack.startTime,
-            glucose.last!.glucoseMessage.timestamp == ack.endTime,
-            glucose.first!.glucoseMessage.timestamp <= glucose.last!.glucoseMessage.timestamp
-        else {
-            throw TransmitterError.observationError("Backfill time interval not reflected in glucose: \(ack.startTime) - \(ack.endTime), buffer: \(glucose.first!.glucoseMessage.timestamp) - \(glucose.last!.glucoseMessage.timestamp)")
+        guard glucose.first!.glucoseMessage.timestamp <= glucose.last!.glucoseMessage.timestamp else {
+            throw TransmitterError.observationError("Backfill timestamps out of order: \(glucose.first!.glucoseMessage.timestamp) - \(glucose.last!.glucoseMessage.timestamp)")
         }
+
+        log.default("Backfill delivered %{public}@ readings", String(glucose.count))
 
         delegateQueue.async {
             self.delegate?.transmitterSession(self, didReadBackfill: glucose)
+        }
+
+        guard complete else {
+            throw TransmitterError.observationError(
+                "Backfill delivered \(glucose.count) readings but was incomplete; will retry the remainder")
         }
     }
 }

@@ -46,6 +46,27 @@ extension G6CGMManager {
             due.insert(.transmitterExpiringSoon)
         }
 
+        // Battery B is the cell that fails first. Only the lower of the two
+        // thresholds is raised at a time, so the milder reminder does not sit
+        // alongside the urgent one saying the same thing.
+        if state.isBatteryVeryLow {
+            due.insert(.transmitterBatteryVeryLow)
+        } else if state.isBatteryLow {
+            due.insert(.transmitterBatteryLow)
+        }
+
+        // A transmitter that will expire before another full session could
+        // finish is worth flagging while the user still has time to order one.
+        // Only meaningful once a session is running and both dates are known;
+        // it is superseded by the expiry warnings above.
+        if !state.isTransmitterExpired,
+           !due.contains(.transmitterExpiringSoon),
+           let transmitterExpiration = state.transmitterExpirationDate,
+           let sensorExpiration = state.sensorExpirationDate,
+           transmitterExpiration < sensorExpiration.addingTimeInterval(state.sensorLife) {
+            due.insert(.lastSessionForTransmitter)
+        }
+
         if let reading = state.latestReading {
             if reading.calibrationState.isSensorFailed {
                 due.insert(.sensorFailed)

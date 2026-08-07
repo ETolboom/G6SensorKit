@@ -249,10 +249,6 @@
       "extractionState": "manual",
       "comment": "Calibration help button"
     },
-    "mg/dL": {
-      "extractionState": "manual",
-      "comment": "Calibration value text field placeholder"
-    },
     "It may take a few minutes": {
       "extractionState": "manual",
       "comment": "Calibration callout title"
@@ -268,10 +264,6 @@
     "Enter a number.": {
       "extractionState": "manual",
       "comment": "Validation message for non-numeric calibration entry"
-    },
-    "Calibrations must be between %d and %d mg/dL. If your meter reads outside that range, treat it and follow your care team's guidance instead of calibrating.": {
-      "extractionState": "manual",
-      "comment": "Validation message for out-of-range calibration (1: minimum, 2: maximum)"
     },
     "Pair New Transmitter": {
       "extractionState": "manual",
@@ -601,10 +593,6 @@
       "extractionState": "manual",
       "comment": "Value when the transmitter reports no trend"
     },
-    "%@%.1f mg/dL per minute": {
-      "extractionState": "manual",
-      "comment": "Trend rate (1: sign, 2: rate)"
-    },
     "Sensor failed": {
       "extractionState": "manual",
       "comment": "Algorithm state: failed"
@@ -680,10 +668,6 @@
     "Last Reading": {
       "extractionState": "manual",
       "comment": "Settings section: last reading"
-    },
-    "%@%.1f mg/dL/min": {
-      "extractionState": "manual",
-      "comment": "Trend rate (1: sign, 2: rate)"
     },
     "No readings — replace the sensor.": {
       "extractionState": "manual",
@@ -792,6 +776,62 @@
     "Expected to finish at %1$@, about %2$d minutes from now": {
       "extractionState": "manual",
       "comment": "Warm-up completion time (1: time, 2: minutes remaining)"
+    },
+    "Calibrations must be between %1$@ and %2$@. If your meter reads outside that range, treat it and follow your care team's guidance instead of calibrating.": {
+      "extractionState": "manual",
+      "comment": "Validation message for out-of-range calibration (1: minimum with unit, 2: maximum with unit)"
+    },
+    "Voltage A": {
+      "extractionState": "manual",
+      "comment": "Transmitter detail label for battery A"
+    },
+    "%d mV": {
+      "extractionState": "manual",
+      "comment": "Voltage in millivolts (1: millivolts)"
+    },
+    "Voltage B": {
+      "extractionState": "manual",
+      "comment": "Transmitter detail label for battery B"
+    },
+    "Resistance": {
+      "extractionState": "manual",
+      "comment": "Transmitter detail label for battery resistance"
+    },
+    "Temperature": {
+      "extractionState": "manual",
+      "comment": "Transmitter detail label for temperature"
+    },
+    "%d °C": {
+      "extractionState": "manual",
+      "comment": "Temperature in Celsius (1: degrees)"
+    },
+    "Last checked": {
+      "extractionState": "manual",
+      "comment": "Transmitter detail label for last battery read"
+    },
+    "Battery": {
+      "extractionState": "manual",
+      "comment": "Transmitter details section header for battery"
+    },
+    "Voltage B is very low. This transmitter may stop sending readings at any time, even during a session. Replace it as soon as you can.": {
+      "extractionState": "manual",
+      "comment": "Footer shown when battery B is very low"
+    },
+    "Voltage B is getting low. The transmitter should finish the sensor you are wearing, but order a replacement now.": {
+      "extractionState": "manual",
+      "comment": "Footer shown when battery B is low"
+    },
+    "Battery B is the cell that runs down first and determines whether the transmitter can finish a session.": {
+      "extractionState": "manual",
+      "comment": "Footer explaining what battery B means"
+    },
+    "%1$@%2$@ per minute": {
+      "extractionState": "manual",
+      "comment": "Trend rate (1: sign, 2: formatted rate with unit)"
+    },
+    "%1$@%2$@/min": {
+      "extractionState": "manual",
+      "comment": "Trend rate (1: sign, 2: formatted rate with unit)"
     }
   },
   "version": "1.0"

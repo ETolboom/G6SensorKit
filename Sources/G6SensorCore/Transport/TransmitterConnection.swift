@@ -15,16 +15,12 @@
 //  sequence is kept as written, including the settle delay before scanning
 //  again — that pause is load-bearing, not incidental.
 //
-//  Two deliberate deviations:
+//  One deliberate deviation: discovery falls back to the advertised local name
+//  when `CBPeripheral.name` is nil, and the peripheral identifier is surfaced
+//  so the integration layer can persist it — CGMBLEKit accepts one at init but
+//  never stores it, so it rediscovers from scratch every launch.
 //
-//  1. The central is process-wide (see G6SharedCentral). CGMBLEKit builds one
-//     per manager, which is safe there because it is never torn down and
-//     rebuilt; here, removing and re-adding the CGM produced a second central
-//     sharing a restoration identifier, and that one never powers on.
-//  2. Discovery falls back to the advertised local name when
-//     `CBPeripheral.name` is nil, and the peripheral identifier is surfaced
-//     so the integration layer can persist it — CGMBLEKit accepts one at init
-//     but never stores it, so it rediscovers from scratch every launch.
+//  The central is owned by this instance, as CGMBLEKit does it.
 //
 //  There is no passive mode. This connection owns the transmitter; it never
 //  observes another app's session.
@@ -74,9 +70,7 @@ class TransmitterConnection: NSObject {
 
     private let log = OSLog(category: "TransmitterConnection")
 
-    /// The process-wide central. Never construct another one: a second
-    /// central sharing the restoration identifier never powers on.
-    private var manager: CBCentralManager { G6SharedCentral.shared.manager }
+    private var manager: CBCentralManager! = nil
 
     /// Isolated to `managerQueue`
     private var peripheral: CBPeripheral? {
@@ -127,21 +121,19 @@ class TransmitterConnection: NSObject {
 
     // MARK: - Synchronization
 
-    private var managerQueue: DispatchQueue { G6SharedCentral.shared.queue }
+    private let managerQueue = DispatchQueue(label: "org.nightscout.G6SensorKit.bluetoothManagerQueue", qos: .unspecified)
 
     init(peripheralIdentifier: UUID? = nil) {
         super.init()
 
         self.peripheralIdentifier = peripheralIdentifier
 
-        // Take over the shared radio. If it is already powered on, its state
-        // is replayed so this connection can start scanning immediately.
-        G6SharedCentral.shared.setActiveDelegate(self)
-    }
-
-    deinit {
-        if G6SharedCentral.shared.activeDelegate === self {
-            G6SharedCentral.shared.setActiveDelegate(nil)
+        managerQueue.sync {
+            self.manager = CBCentralManager(
+                delegate: self,
+                queue: managerQueue,
+                options: [CBCentralManagerOptionRestoreIdentifierKey: "org.nightscout.G6SensorKit"]
+            )
         }
     }
 

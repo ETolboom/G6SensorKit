@@ -27,4 +27,14 @@ extension HKUnit {
     static let millimolesPerLiterPerMinute: HKUnit = {
         return HKUnit.millimolesPerLiter.unitDivided(by: .minute())
     }()
+
+    var localizedShortUnitString: String {
+        if self == .millimolesPerLiter {
+            return LocalizedString("mmol/L", comment: "The short unit display string for millimoles of glucose per liter")
+        } else if self == .milligramsPerDeciliter {
+            return LocalizedString("mg/dL", comment: "The short unit display string for milligrams of glucose per deciliter")
+        } else {
+            return String(describing: self)
+        }
+    }
 }

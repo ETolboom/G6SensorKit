@@ -198,6 +198,9 @@ kitui.build_configurations.each do |config|
 end
 
 add_sources(project, kitui, kitui_group, 'G6SensorKitUI')
+# HKUnit's helpers are internal, so the UI target compiles its own copy, as
+# LibreTransmitter does. Only this file: the UI has its own LocalizedString.
+kitui.add_file_references([common_group.new_reference('HKUnit.swift')])
 add_string_catalog(kitui, kitui_group, 'G6SensorKitUI')
 link(kitui, loopkit_ref)
 link(kitui, loopkitui_ref)

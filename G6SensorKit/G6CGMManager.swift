@@ -404,9 +404,9 @@ public final class G6CGMManager: CGMManager {
         }
 
         // Stop first: callbacks from the old session must not land in the
-        // middle of the state reset.
+        // middle of the state reset. The session itself is kept and pointed at
+        // the new transmitter — the radio does not need rebuilding for a swap.
         session?.stop()
-        session = nil
         lockedPendingCommands.mutate { $0.removeAll() }
         raisedAlerts = []
 
@@ -425,7 +425,12 @@ public final class G6CGMManager: CGMManager {
         }
 
         connectionPhase = .searching
-        startSession()
+
+        if let session = session {
+            session.retarget(id: id)
+        } else {
+            startSession()
+        }
     }
 
     public func completeOnboarding() {
@@ -628,7 +633,18 @@ extension G6CGMManager: TransmitterSessionDelegate {
 
     public func transmitterSession(_ session: TransmitterSession, didReadBattery message: BatteryStatusRxMessage) {
         lastBatteryReadDate = Date()
-        log.default("Battery: A %d, B %d", Int(message.voltageA), Int(message.voltageB))
+        log.default("Battery: A %d, B %d, resist %d", Int(message.voltageA), Int(message.voltageB), Int(message.resist))
+
+        mutateState { state in
+            state.batteryVoltageA = message.voltageA
+            state.batteryVoltageB = message.voltageB
+            state.batteryResistance = message.resist
+            state.batteryRuntimeDays = message.runtime
+            state.batteryTemperature = message.temperature
+            state.lastBatteryReadDate = Date()
+        }
+
+        evaluateAlerts()
     }
 
     public func transmitterSession(_ session: TransmitterSession, didReadUnknownData data: Data) {

@@ -5,8 +5,10 @@
 //  Copyright © 2026 Nightscout Foundation. MIT License.
 //
 //  Response codes the transmitter returns for session commands. These are
-//  protocol facts, observable on the wire and cross-checked against the
-//  xDrip4iOS and xDrip+ projects' documented behaviour.
+//  protocol facts, observable on the wire. The G6 protocol was reverse
+//  engineered over years by several people — Nathan Racklyeft and Pete
+//  Schwamb first, then others; xDrip4iOS and xDrip+ are where the codes are
+//  written down, not where they were worked out.
 //
 //  They were previously discarded: a rejected session start logged
 //  "Command completed" exactly like an accepted one, so the app showed

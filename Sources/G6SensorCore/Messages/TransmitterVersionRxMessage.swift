@@ -29,8 +29,9 @@ public struct TransmitterVersionRxMessage: TransmitterRxMessage {
         transmitterExpiryInDays = (UInt16(data[14]) << 8) + UInt16(data[13])
     }
 
-    /// Heuristic borrowed from xDrip4iOS: Anubis-modded G6 transmitters
-    /// report a 180-day expiry in the version-rx frame; stock G6 reports 90.
+    /// Anubis-modded G6 transmitters report a 180-day expiry in the
+    /// version-rx frame; stock G6 reports 90. Observed independently in
+    /// several projects; xDrip4iOS is where we checked it.
     public var isAnubis: Bool {
         return transmitterExpiryInDays == 180
     }

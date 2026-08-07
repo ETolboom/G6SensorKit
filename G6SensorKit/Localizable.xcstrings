@@ -88,6 +88,38 @@
     "Ended because the transmitter was replaced": {
       "extractionState": "manual",
       "comment": "Reason recorded when a session ends due to a transmitter swap"
+    },
+    "Transmitter battery getting low": {
+      "extractionState": "manual",
+      "comment": "Alert title for a low transmitter battery"
+    },
+    "Transmitter battery very low": {
+      "extractionState": "manual",
+      "comment": "Alert title for a very low transmitter battery"
+    },
+    "Last session for this transmitter": {
+      "extractionState": "manual",
+      "comment": "Alert title when a transmitter cannot fit another full session"
+    },
+    "Your transmitter's battery is getting low. It should finish the sensor you are wearing, but order a replacement transmitter now so you are not caught out.": {
+      "extractionState": "manual",
+      "comment": "Alert body for a low transmitter battery"
+    },
+    "Your transmitter's battery is very low and it may stop sending readings at any time, even mid-session. Replace the transmitter as soon as you can, and check your glucose with a fingerstick meter if readings stop.": {
+      "extractionState": "manual",
+      "comment": "Alert body for a very low transmitter battery"
+    },
+    "Your transmitter does not have enough life left for another full sensor session after this one. Have a replacement transmitter ready before this sensor ends.": {
+      "extractionState": "manual",
+      "comment": "Alert body when a transmitter cannot fit another full session"
+    },
+    "mmol/L": {
+      "extractionState": "manual",
+      "comment": "The short unit display string for millimoles of glucose per liter"
+    },
+    "mg/dL": {
+      "extractionState": "manual",
+      "comment": "The short unit display string for milligrams of glucose per deciliter"
     }
   },
   "version": "1.0"

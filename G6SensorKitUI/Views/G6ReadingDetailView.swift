@@ -11,6 +11,7 @@
 //
 
 import SwiftUI
+import HealthKit
 import LoopKit
 import LoopKitUI
 import G6SensorKit
@@ -22,19 +23,25 @@ struct G6ReadingDetailView: View {
     let deviceModel: String
     let transmitterID: String
 
+    @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
+
+    private var glucoseQuantity: HKQuantity {
+        return HKQuantity(unit: .milligramsPerDeciliter, doubleValue: reading.glucoseMgDL)
+    }
+
     var body: some View {
         List {
             Section {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("\(Int(reading.glucoseMgDL))")
+                        Text(displayGlucosePreference.format(glucoseQuantity, includeUnit: false))
                             .font(.system(size: 44, weight: .semibold, design: .rounded))
                         if let symbol = trendSymbol {
                             Image(systemName: symbol)
                                 .font(.title2.weight(.semibold))
                                 .foregroundStyle(.secondary)
                         }
-                        Text(LocalizedString("mg/dL", comment: "Glucose unit label"))
+                        Text(displayGlucosePreference.unit.localizedShortUnitString)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -93,9 +100,11 @@ struct G6ReadingDetailView: View {
         guard let rate = reading.trendRateMgDLPerMinute else {
             return LocalizedString("Not available", comment: "Value when the transmitter reports no trend")
         }
+        let quantity = HKQuantity(unit: HKUnit.milligramsPerDeciliter.unitDivided(by: .minute()), doubleValue: rate)
         return String(
-            format: LocalizedString("%@%.1f mg/dL per minute", comment: "Trend rate (1: sign, 2: rate)"),
-            rate > 0 ? "+" : "", rate
+            format: LocalizedString("%1$@%2$@ per minute", comment: "Trend rate (1: sign, 2: formatted rate with unit)"),
+            rate > 0 ? "+" : "",
+            displayGlucosePreference.formatMinuteRate(quantity)
         )
     }
 

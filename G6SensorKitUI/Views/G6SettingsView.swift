@@ -10,6 +10,7 @@
 //
 
 import SwiftUI
+import HealthKit
 import LoopKit
 import LoopKitUI
 import G6SensorKit
@@ -221,6 +222,9 @@ final class G6SettingsViewModel: ObservableObject, G6CGMManagerObserver {
 struct G6SettingsView: View {
 
     @ObservedObject var viewModel: G6SettingsViewModel
+
+    @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
+
     @State private var showingStopConfirmation = false
     @State private var showingLogShare = false
     @State private var showingDeleteConfirmation = false
@@ -297,11 +301,13 @@ struct G6SettingsView: View {
         Section(LocalizedString("Last Reading", comment: "Settings section: last reading")) {
             if let reading = viewModel.state.latestReading, !viewModel.state.isInWarmup {
                 HStack(alignment: .firstTextBaseline) {
-                    Text("\(Int(reading.glucoseMgDL))")
+                    Text(displayGlucosePreference.format(
+                        HKQuantity(unit: .milligramsPerDeciliter, doubleValue: reading.glucoseMgDL),
+                        includeUnit: false))
                         .font(.system(size: 44, weight: .semibold, design: .rounded))
                         .monospacedDigit()
                         .foregroundStyle(viewModel.isSignalLost ? .secondary : .primary)
-                    Text(LocalizedString("mg/dL", comment: "Glucose unit label"))
+                    Text(displayGlucosePreference.unit.localizedShortUnitString)
                         .font(.headline)
                         .foregroundStyle(.secondary)
                     Spacer()
@@ -317,8 +323,11 @@ struct G6SettingsView: View {
                         .foregroundStyle(.secondary)
                     Spacer()
                     if let rate = reading.trendRateMgDLPerMinute {
-                        Text(String(format: LocalizedString("%@%.1f mg/dL/min", comment: "Trend rate (1: sign, 2: rate)"),
-                                    rate > 0 ? "+" : "", rate))
+                        Text(String(format: LocalizedString("%1$@%2$@/min", comment: "Trend rate (1: sign, 2: formatted rate with unit)"),
+                                    rate > 0 ? "+" : "",
+                                    displayGlucosePreference.formatMinuteRate(
+                                        HKQuantity(unit: HKUnit.milligramsPerDeciliter.unitDivided(by: .minute()), doubleValue: rate),
+                                        includeUnit: false)))
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
                     }
