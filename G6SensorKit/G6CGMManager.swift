@@ -69,7 +69,7 @@ public final class G6CGMManager: CGMManager {
     public private(set) var session: TransmitterSession?
 
     /// Commands queued for the next connection cycle.
-    private let lockedPendingCommands: Locked<[Command]> = Locked([])
+    private let lockedCommandQueue: Locked<CommandQueue> = Locked(CommandQueue())
 
     private var lastBatteryReadDate: Date?
 
@@ -134,7 +134,7 @@ public final class G6CGMManager: CGMManager {
 
     public init(state: G6CGMManagerState) {
         self.lockedState = Locked(state)
-        lockedPendingCommands.mutate { $0 = state.pendingCommands.compactMap(Command.init(rawValue:)) }
+        lockedCommandQueue.mutate { $0 = CommandQueue(rawValues: state.pendingCommands) }
         startSession()
     }
 
@@ -151,7 +151,7 @@ public final class G6CGMManager: CGMManager {
         }
 
         self.lockedState = Locked(state)
-        lockedPendingCommands.mutate { $0 = state.pendingCommands.compactMap(Command.init(rawValue:)) }
+        lockedCommandQueue.mutate { $0 = CommandQueue(rawValues: state.pendingCommands) }
         startSession()
     }
 
@@ -304,11 +304,8 @@ public final class G6CGMManager: CGMManager {
         // is persisted, a stale code-less start could reach the transmitter
         // ahead of the one carrying the sensor code the user actually typed.
         var superseded = 0
-        lockedPendingCommands.mutate { commands in
-            let before = commands.count
-            commands.removeAll { $0.supersededBy(command) }
-            superseded = before - commands.count
-            commands.append(command)
+        lockedCommandQueue.mutate { queue in
+            superseded = queue.enqueue(command)
         }
 
         if superseded > 0 {
@@ -316,10 +313,7 @@ public final class G6CGMManager: CGMManager {
         }
 
         mutateState { state in
-            state.pendingCommands.removeAll { raw in
-                Command(rawValue: raw).map { $0.supersededBy(command) } ?? true
-            }
-            state.pendingCommands.append(command.rawValue)
+            state.pendingCommands = self.lockedCommandQueue.value.rawValues
 
             // Reflect the entered code straight away. Waiting until the
             // transmitter answered meant the screen said "Not used" for as
@@ -332,6 +326,27 @@ public final class G6CGMManager: CGMManager {
 
         // Nudge the connection in case it is idle.
         session?.start()
+
+        #if targetEnvironment(simulator)
+        // No link will ever drain the queue in the simulator; apply the
+        // command to state directly, mirroring didComplete on hardware,
+        // so End Sensor / Start New Sensor work end-to-end there.
+        lockedCommandQueue.mutate { _ = $0.dequeue() }
+        mutateState { state in
+            state.pendingCommands = self.lockedCommandQueue.value.rawValues
+            switch command {
+            case .stopSensor:
+                state.sensorStartDate = nil
+                state.sensorCode = nil
+            case .startSensor(let date, let sensorCode):
+                state.sensorCode = sensorCode.carriesParameters ? sensorCode.code : nil
+                state.sensorStartDate = date
+                    .addingTimeInterval(-(state.warmupPeriod - G6CGMManager.simulatedWarmupRemaining))
+            case .calibrateSensor, .resetTransmitter:
+                break
+            }
+        }
+        #endif
     }
 
     public func setSensorLifeDays(_ days: Int) {
@@ -383,7 +398,7 @@ public final class G6CGMManager: CGMManager {
             if connectionPhase == .connected {
                 log.default("Old transmitter still connected; sending session stop before switching")
                 session?.commandSource = self
-                lockedPendingCommands.mutate { $0 = [.stopSensor(at: Date())] }
+                lockedCommandQueue.mutate { $0 = CommandQueue([.stopSensor(at: Date())]) }
             } else {
                 log.default("Old transmitter not connected; its session is left as-is")
             }
@@ -407,7 +422,7 @@ public final class G6CGMManager: CGMManager {
         // middle of the state reset. The session itself is kept and pointed at
         // the new transmitter — the radio does not need rebuilding for a swap.
         session?.stop()
-        lockedPendingCommands.mutate { $0.removeAll() }
+        lockedCommandQueue.mutate { $0.removeAll() }
         raisedAlerts = []
 
         mutateState { state in
@@ -846,36 +861,17 @@ extension G6CGMManager: TransmitterCommandSource {
     public func dequeuePendingCommand(for session: TransmitterSession) -> Command? {
         var next: Command?
         var dropped: [Command] = []
-        lockedPendingCommands.mutate { commands in
-            // A calibration is only meaningful next to the fingerstick it came
-            // from; xDrip uses the same five-minute window. Sending a stale one
-            // would teach the sensor from a value that no longer holds.
-            while let candidate = commands.first {
-                commands.removeFirst()
-                if case .calibrateSensor(_, let date) = candidate,
-                   Date().timeIntervalSince(date) > .minutes(5) {
-                    dropped.append(candidate)
-                    continue
-                }
-                next = candidate
-                break
-            }
+        lockedCommandQueue.mutate { queue in
+            (next, dropped) = queue.dequeue()
         }
 
         for command in dropped {
             log.default("Dropping stale command: %{public}@", String(describing: command))
-            mutateState { state in
-                if !state.pendingCommands.isEmpty {
-                    state.pendingCommands.removeFirst()
-                }
-            }
         }
 
-        if next != nil {
+        if next != nil || !dropped.isEmpty {
             mutateState { state in
-                if !state.pendingCommands.isEmpty {
-                    state.pendingCommands.removeFirst()
-                }
+                state.pendingCommands = self.lockedCommandQueue.value.rawValues
             }
         }
 
