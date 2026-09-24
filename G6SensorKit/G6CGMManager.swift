@@ -837,27 +837,10 @@ extension G6CGMManager: TransmitterSessionDelegate {
     }
 
     private func glucoseTrend(for glucose: Glucose) -> GlucoseTrend? {
-        guard let rate = glucose.trendRateMgDLPerMinute else {
+        guard let arrow = G6TrendArrow(dexcomRateMgDLPerMinute: glucose.trendRateMgDLPerMinute) else {
             return nil
         }
-
-        // Standard Dexcom trend arrow thresholds in (mg/dL)/min.
-        switch rate {
-        case ..<(-3):
-            return .downDownDown
-        case ..<(-2):
-            return .downDown
-        case ..<(-1):
-            return .down
-        case ..<1:
-            return .flat
-        case ..<2:
-            return .up
-        case ..<3:
-            return .upUp
-        default:
-            return .upUpUp
-        }
+        return GlucoseTrend(rawValue: arrow.rawValue)
     }
 }
 
@@ -948,18 +931,10 @@ struct G6GlucoseDisplay: GlucoseDisplayable {
     }
 
     var trendType: GlucoseTrend? {
-        guard let rate = reading.trendRateMgDLPerMinute else {
+        guard let arrow = G6TrendArrow(dexcomRateMgDLPerMinute: reading.trendRateMgDLPerMinute) else {
             return nil
         }
-        switch rate {
-        case ..<(-3): return .downDownDown
-        case ..<(-2): return .downDown
-        case ..<(-1): return .down
-        case ..<1: return .flat
-        case ..<2: return .up
-        case ..<3: return .upUp
-        default: return .upUpUp
-        }
+        return GlucoseTrend(rawValue: arrow.rawValue)
     }
 
     var trendRate: HKQuantity? {

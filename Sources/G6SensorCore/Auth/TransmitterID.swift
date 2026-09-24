@@ -21,6 +21,11 @@ public struct TransmitterID {
         self.id = id
     }
 
+    /// The G6-family model, classified from the transmitter ID prefix.
+    public var model: G6TransmitterModel {
+        return G6TransmitterModel(transmitterID: id)
+    }
+
     private var cryptKey: Data? {
         return "00\(id)00\(id)".data(using: .utf8)
     }

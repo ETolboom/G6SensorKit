@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "1FC930737F45A671AE16478F"
+               BlueprintIdentifier = "215CD1147465A2E980A94D63"
                BuildableName = "G6SensorKit.framework"
                BlueprintName = "G6SensorKit"
                ReferencedContainer = "container:G6SensorKit.xcodeproj">

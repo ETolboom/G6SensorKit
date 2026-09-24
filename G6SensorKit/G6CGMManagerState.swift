@@ -345,11 +345,9 @@ public struct G6CGMManagerState: RawRepresentable {
     /// The device model implied by the transmitter ID prefix. G6 transmitters
     /// use `8…`; Dexcom ONE uses `5…` or `C…`.
     public var deviceModel: String {
-        switch transmitterID.first {
-        case "5", "C", "c":
-            return "Dexcom ONE"
-        default:
-            return "Dexcom G6"
+        switch G6TransmitterModel(transmitterID: transmitterID) {
+        case .g6: return "Dexcom G6"
+        case .one: return "Dexcom ONE"
         }
     }
 }

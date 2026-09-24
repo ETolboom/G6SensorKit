@@ -151,15 +151,17 @@ final class G6SettingsViewModel: ObservableObject, G6CGMManagerObserver {
     }
 
     var trendSymbol: String? {
-        guard let rate = state.latestReading?.trendRateMgDLPerMinute, !isSignalLost else {
+        guard !isSignalLost,
+              let arrow = G6TrendArrow(dexcomRateMgDLPerMinute: state.latestReading?.trendRateMgDLPerMinute)
+        else {
             return nil
         }
-        switch rate {
-        case ..<(-3): return "arrow.down"
-        case ..<(-1): return "arrow.down.right"
-        case ..<1: return "arrow.right"
-        case ..<3: return "arrow.up.right"
-        default: return "arrow.up"
+        switch arrow {
+        case .downDownDown, .downDown: return "arrow.down"
+        case .down: return "arrow.down.right"
+        case .flat: return "arrow.right"
+        case .up, .upUp: return "arrow.up.right"
+        case .upUpUp: return "arrow.up"
         }
     }
 
