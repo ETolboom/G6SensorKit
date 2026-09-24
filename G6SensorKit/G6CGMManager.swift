@@ -71,8 +71,6 @@ public final class G6CGMManager: CGMManager {
     /// Commands queued for the next connection cycle.
     private let lockedCommandQueue: Locked<CommandQueue> = Locked(CommandQueue())
 
-    private var lastBatteryReadDate: Date?
-
     /// Response code from a session start awaiting confirmation. The reply
     /// alone does not say whether a session began, so it is held until the
     /// transmitter's state settles the question.
@@ -332,6 +330,17 @@ public final class G6CGMManager: CGMManager {
         // command to state directly, mirroring didComplete on hardware,
         // so End Sensor / Start New Sensor work end-to-end there.
         lockedCommandQueue.mutate { _ = $0.dequeue() }
+        if case .stopSensor = command, state.sensorStartDate != nil {
+            let sensorEnded = PersistedCgmEvent(
+                date: Date(),
+                type: .sensorEnd,
+                deviceIdentifier: state.transmitterID,
+                failureMessage: LocalizedString("Stopped by user", comment: "Reason recorded when a session ends because the user stopped it")
+            )
+            delegate.notify { delegate in
+                delegate?.cgmManager(self, hasNew: [sensorEnded])
+            }
+        }
         mutateState { state in
             state.pendingCommands = self.lockedCommandQueue.value.rawValues
             switch command {
@@ -545,9 +554,9 @@ public final class G6CGMManager: CGMManager {
             }
         }
 
-        if let last = lastBatteryReadDate, Date().timeIntervalSince(last) < Self.batteryReadInterval {
-            // Battery was read recently.
-        } else {
+        let batteryReadRecently = state.lastBatteryReadDate
+            .map { Date().timeIntervalSince($0) < Self.batteryReadInterval } ?? false
+        if !batteryReadRecently {
             session?.shouldReadBattery = true
         }
 
@@ -647,7 +656,6 @@ extension G6CGMManager: TransmitterSessionDelegate {
     }
 
     public func transmitterSession(_ session: TransmitterSession, didReadBattery message: BatteryStatusRxMessage) {
-        lastBatteryReadDate = Date()
         log.default("Battery: A %d, B %d, resist %d", Int(message.voltageA), Int(message.voltageB), Int(message.resist))
 
         mutateState { state in
@@ -907,6 +915,17 @@ extension G6CGMManager: TransmitterCommandSource {
                 state.lastSessionStartFailure = nil
             }
         case .stopSensor:
+            if state.sensorStartDate != nil {
+                let sensorEnded = PersistedCgmEvent(
+                    date: Date(),
+                    type: .sensorEnd,
+                    deviceIdentifier: state.transmitterID,
+                    failureMessage: LocalizedString("Stopped by user", comment: "Reason recorded when a session ends because the user stopped it")
+                )
+                delegate.notify { delegate in
+                    delegate?.cgmManager(self, hasNew: [sensorEnded])
+                }
+            }
             mutateState { state in
                 state.sensorStartDate = nil
                 state.sensorCode = nil

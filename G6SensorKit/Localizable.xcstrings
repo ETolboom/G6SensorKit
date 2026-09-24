@@ -120,6 +120,10 @@
     "mg/dL": {
       "extractionState": "manual",
       "comment": "The short unit display string for milligrams of glucose per deciliter"
+    },
+    "Stopped by user": {
+      "extractionState": "manual",
+      "comment": "Reason recorded when a session ends because the user stopped it"
     }
   },
   "version": "1.0"

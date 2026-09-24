@@ -69,7 +69,7 @@ public struct TransmitterManagerState: RawRepresentable, Equatable {
         let sensorStartOffset = rawValue["sensorStartOffset"] as? UInt32
 
         let transmitterExpiryInDays = (rawValue["transmitterExpiryInDays"] as? UInt16)
-            ?? (rawValue["transmitterExpiryInDays"] as? Int).map { UInt16($0) }
+            ?? (rawValue["transmitterExpiryInDays"] as? Int).map { UInt16(clamping: $0) }
 
         let sensorLifeDays = rawValue["sensorLifeDays"] as? Int ?? Self.defaultSensorLifeDays
 

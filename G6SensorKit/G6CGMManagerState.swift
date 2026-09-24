@@ -308,7 +308,14 @@ public struct G6CGMManagerState: RawRepresentable {
         return sensorStartDate?.addingTimeInterval(sensorLife)
     }
 
+    /// Unknown until the first version read: the fallback constants in
+    /// `transmitterLifetime` are guesses (a 180-day Anubis would alert as
+    /// "expired" against the stock 90 days), so no expiry is reported before
+    /// the transmitter's own value is in.
     public var transmitterExpirationDate: Date? {
+        guard transmitterExpiryInDays != nil else {
+            return nil
+        }
         return transmitterStartDate?.addingTimeInterval(transmitterLifetime)
     }
 

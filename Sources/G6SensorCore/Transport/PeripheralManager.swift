@@ -147,7 +147,7 @@ extension PeripheralManager {
         }
     }
 
-    private func applyConfiguration(discoveryTimeout: TimeInterval = 2) throws {
+    private func applyConfiguration(discoveryTimeout: TimeInterval = 10) throws {
         try discoverServices(configuration.serviceCharacteristics.keys.map { $0 }, timeout: discoveryTimeout)
 
         for service in peripheral.services ?? [] {
@@ -400,11 +400,13 @@ extension PeripheralManager: CBPeripheralDelegate {
         var notifyDelegate = false
 
         if let index = commandConditions.firstIndex(where: { (condition) -> Bool in
-            if case .valueUpdate(characteristic: characteristic, matching: let matching) = condition {
-                return matching?(characteristic.value) ?? true
-            } else {
+            guard case .valueUpdate(characteristic: let conditionCharacteristic, matching: let matching) = condition,
+                  conditionCharacteristic == characteristic
+            else {
                 return false
             }
+
+            return matching?(characteristic.value) ?? true
         }) {
             commandConditions.remove(at: index)
             commandError = error
@@ -414,7 +416,9 @@ extension PeripheralManager: CBPeripheralDelegate {
             }
         } else if let macro = configuration.valueUpdateMacros[characteristic.uuid] {
             macro(self)
-        } else if commandConditions.isEmpty {
+        } else {
+            // Unclaimed by any condition or macro: pass it along to the
+            // delegate even while an unrelated command is still pending.
             notifyDelegate = true // execute after the unlock
         }
 
