@@ -12,7 +12,7 @@ import PackageDescription
 let package = Package(
     name: "G6SensorCore",
     platforms: [
-        .iOS(.v15),
+        .iOS(.v17),
         .macOS(.v13),
     ],
     products: [

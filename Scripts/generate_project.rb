@@ -20,7 +20,7 @@ require 'fileutils'
 ROOT = File.expand_path('..', __dir__)
 PROJECT_PATH = File.join(ROOT, 'G6SensorKit.xcodeproj')
 
-DEPLOYMENT_TARGET = '15.1'
+DEPLOYMENT_TARGET = '17.6'
 SWIFT_VERSION = '5.9'
 BUNDLE_PREFIX = 'org.nightscout'
 

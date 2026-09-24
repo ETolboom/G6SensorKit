@@ -19,6 +19,21 @@ import LoopKitUI
 import G6SensorKit
 import G6SensorCore
 
+#if targetEnvironment(simulator)
+/// Simulator stand-in for the camera scanner, which needs hardware the
+/// simulator lacks: the scan buttons stay visible there and deliver a
+/// fixed payload, so the whole scan flow can be exercised without a
+/// device. Compiled out on hardware. Both payloads are real, public
+/// Dexcom packaging data (the same ones the parser tests use).
+enum G6DemoScan {
+    /// The full Data Matrix from a public G6 transmitter box photo.
+    static let transmitterBox = G6PackageScan(payload:
+        "241STT-OM-001\u{1D}1018038762\u{1D}2188H03B\u{1D}17250226")
+    /// A real, public G6 applicator label.
+    static let applicator = G6PackageScan(payload: "10731863521434687D2405937")
+}
+#endif
+
 // MARK: - Shared building blocks
 
 /// A numbered instruction row used by the placement guide.
@@ -71,6 +86,75 @@ struct G6ContinueButton: View {
         .disabled(!isEnabled)
         .padding(.horizontal)
         .padding(.bottom)
+    }
+}
+
+/// Large per-character boxes over a hidden text field that does the real
+/// input. Shared by the transmitter-ID screen (6 boxes, alphanumeric)
+/// and the sensor-code screen (4 boxes, numeric).
+struct G6CodeBoxField: View {
+    enum AllowedCharacters {
+        case alphanumericUppercased
+        case numeric
+    }
+
+    @Binding var text: String
+    let length: Int
+    let allowedCharacters: AllowedCharacters
+    var focused: FocusState<Bool>.Binding
+
+    private var filteredText: Binding<String> {
+        Binding(
+            get: { text },
+            set: { newValue in
+                let filtered: String
+                switch allowedCharacters {
+                case .alphanumericUppercased:
+                    filtered = newValue.filter { $0.isLetter || $0.isNumber }.uppercased()
+                case .numeric:
+                    filtered = newValue.filter(\.isNumber)
+                }
+                text = String(filtered.prefix(length))
+            }
+        )
+    }
+
+    var body: some View {
+        ZStack {
+            TextField("", text: filteredText)
+                .focused(focused)
+                .keyboardType(allowedCharacters == .alphanumericUppercased ? .asciiCapable : .numberPad)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(allowedCharacters == .alphanumericUppercased ? .characters : .never)
+                .foregroundColor(.clear)
+                .accentColor(.clear)
+                .opacity(0.02)
+
+            HStack(spacing: 10) {
+                ForEach(0 ..< length, id: \.self) { index in
+                    let characters = Array(text)
+                    let character = index < characters.count ? String(characters[index]) : ""
+                    let isActive = index == characters.count
+
+                    Text(character)
+                        .font(.title.weight(.semibold).monospaced())
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 64)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(Color(.secondarySystemGroupedBackground))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(isActive ? Color.accentColor : Color(.separator), lineWidth: isActive ? 2 : 1)
+                        )
+                }
+            }
+            .allowsHitTesting(false)
+        }
+        .frame(height: 64)
+        .contentShape(Rectangle())
+        .onTapGesture { focused.wrappedValue = true }
     }
 }
 
@@ -172,6 +256,10 @@ struct G6TransmitterIDEntryView: View {
 
     @State private var transmitterID: String = ""
     @State private var validationMessage: String?
+    @State private var showScanner = false
+    @State private var showCameraDeniedAlert = false
+    @State private var scanFailedMessage: String?
+    @FocusState private var fieldFocused: Bool
 
     init(initialValue: String, didSubmit: @escaping (String) -> Void) {
         self.initialValue = initialValue
@@ -202,24 +290,42 @@ struct G6TransmitterIDEntryView: View {
                         G6TransmitterBackGlyph(size: 150)
                     }
 
-                    TextField(LocalizedString("6-character ID", comment: "Transmitter ID text field placeholder"), text: $transmitterID)
-                        .textCase(.uppercase)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.characters)
-                        .font(.title3.monospaced())
-                        .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(10)
-                        .onChange(of: transmitterID) { newValue in
-                            transmitterID = String(newValue.uppercased().prefix(6))
-                            validationMessage = nil
-                        }
+                    G6CodeBoxField(
+                        text: $transmitterID,
+                        length: 6,
+                        allowedCharacters: .alphanumericUppercased,
+                        focused: $fieldFocused
+                    )
+                    .frame(maxWidth: .infinity)
+                    .onChange(of: transmitterID) {
+                        validationMessage = nil
+                        autoSubmitIfComplete()
+                    }
 
-                    if let validationMessage = validationMessage {
-                        Text(validationMessage)
-                            .font(.subheadline)
-                            .foregroundColor(.red)
-                            .fixedSize(horizontal: false, vertical: true)
+                    VStack(spacing: 6) {
+                        if let validationMessage = validationMessage {
+                            Text(validationMessage)
+                                .foregroundColor(.red)
+                        }
+                        if let scanFailedMessage = scanFailedMessage {
+                            Text(verbatim: scanFailedMessage)
+                                .foregroundColor(.red)
+                        }
+                    }
+                    .font(.subheadline)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity)
+
+                    if isScanAvailable {
+                        Button(action: scanTapped) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "barcode.viewfinder")
+                                Text(LocalizedString("Scan package code", comment: "Scan package barcode button"))
+                            }
+                            .font(.subheadline.weight(.semibold))
+                        }
+                        .frame(maxWidth: .infinity)
                     }
 
                     Text(LocalizedString("This app works with Dexcom G6 and Dexcom ONE transmitters. Older G5 transmitters, whose IDs begin with 4, are not supported.", comment: "Transmitter ID: supported hardware note"))
@@ -229,11 +335,120 @@ struct G6TransmitterIDEntryView: View {
                 }
                 .padding()
             }
+            .onTapGesture { fieldFocused = false }
 
             G6ContinueButton(isEnabled: transmitterID.count == 6) {
                 submit()
             }
         }
+        .sheet(isPresented: $showScanner) { scannerSheet }
+        .alert(
+            Text(LocalizedString("Camera access is off", comment: "Camera denied alert title")),
+            isPresented: $showCameraDeniedAlert
+        ) {
+            Button(action: {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }) { Text(LocalizedString("Open Settings", comment: "Open Settings button")) }
+            Button(role: .cancel, action: {}) { Text(LocalizedString("Cancel", comment: "Cancel button")) }
+        } message: {
+            Text(LocalizedString("Allow camera access in Settings to scan the Data Matrix code on your Dexcom transmitter packaging.", comment: "Camera denied alert message"))
+        }
+    }
+
+    /// A complete ID submits itself, typed or scanned: with the boxes full
+    /// there is nothing left to enter. A short delay lets the last box
+    /// visibly fill first.
+    private func autoSubmitIfComplete() {
+        guard transmitterID.count == 6, !isG5 else {
+            return
+        }
+        fieldFocused = false
+        let submitted = transmitterID
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            guard transmitterID == submitted else { return }
+            didSubmit(submitted)
+        }
+    }
+
+    // MARK: - Package scanning
+
+    /// The camera scanner needs hardware support and a camera usage
+    /// description; the simulator gets the demo-payload stand-in instead
+    /// (see `G6DemoScan`).
+    private var isScanAvailable: Bool {
+        #if targetEnvironment(simulator)
+        return true
+        #else
+        return G6PackageScannerView.isSupported
+        #endif
+    }
+
+    private func scanTapped() {
+        #if targetEnvironment(simulator)
+        handleScan(G6DemoScan.transmitterBox)
+        #else
+        switch G6PackageScannerView.cameraAuthorization {
+        case .authorized:
+            showScanner = true
+        case .notDetermined:
+            G6PackageScannerView.requestCameraAccess { granted in
+                if granted {
+                    showScanner = true
+                } else {
+                    showCameraDeniedAlert = true
+                }
+            }
+        default:
+            showCameraDeniedAlert = true
+        }
+        #endif
+    }
+
+    private func handleScan(_ scan: G6PackageScan) {
+        showScanner = false
+        scanFailedMessage = nil
+
+        // A usable ID outweighs the GTIN check: the transmitter box's own
+        // Data Matrices carry no (01) — the GTIN sits on a separate linear
+        // barcode — so gating on isDexcomPackage would reject the box.
+        guard let candidate = scan.transmitterIDCandidate else {
+            scanFailedMessage = scan.isDexcomPackage
+                ? LocalizedString("Scanned a Dexcom package, but couldn't find a transmitter ID in it. Type the ID manually.", comment: "Scanned Dexcom barcode without a transmitter ID")
+                : LocalizedString("That doesn't look like a Dexcom package. Try again or type the ID manually.", comment: "Scanned non-Dexcom barcode")
+            return
+        }
+
+        // Assigning the field fires the auto-submit path, same as typing.
+        transmitterID = candidate
+    }
+
+    private func handleScanStartFailure(_: Error) {
+        showScanner = false
+        scanFailedMessage = LocalizedString("The camera couldn't start. Try again or type the ID manually.", comment: "Scanner failed to start")
+    }
+
+    private var scannerSheet: some View {
+        NavigationView {
+            G6PackageScannerView(onScan: handleScan, onStartFailure: handleScanStartFailure)
+                .edgesIgnoringSafeArea(.all)
+                .navigationTitle(Text(LocalizedString("Scan package code", comment: "Scanner screen title")))
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(action: { showScanner = false }) {
+                            Text(LocalizedString("Cancel", comment: "Cancel button"))
+                        }
+                    }
+                }
+        }
+    }
+
+    // MARK: - Submit
+
+    private var isG5: Bool {
+        return transmitterID.hasPrefix("4")
     }
 
     private func submit() {
@@ -241,7 +456,7 @@ struct G6TransmitterIDEntryView: View {
             return
         }
 
-        if transmitterID.hasPrefix("4") {
+        if isG5 {
             validationMessage = LocalizedString("IDs that begin with 4 belong to Dexcom G5 transmitters, which this app does not support.", comment: "Validation message for G5 transmitter ID")
             return
         }
@@ -259,6 +474,9 @@ struct G6SensorCodeEntryView: View {
     @State private var sensorCode: String = ""
     @State private var validationMessage: String?
     @State private var confirmingNoCode = false
+    @State private var showScanner = false
+    @State private var showCameraDeniedAlert = false
+    @State private var scanFailedMessage: String?
     @FocusState private var codeFieldFocused: Bool
 
     var body: some View {
@@ -275,23 +493,43 @@ struct G6SensorCodeEntryView: View {
                         G6SensorCodeLabelGlyph(size: 150)
                     }
 
-                    TextField(LocalizedString("4-digit code", comment: "Sensor code text field placeholder"), text: $sensorCode)
-                        .keyboardType(.numberPad)
-                        .focused($codeFieldFocused)
-                        .font(.title3.monospaced())
-                        .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(10)
-                        .onChange(of: sensorCode) { newValue in
-                            sensorCode = String(newValue.filter(\.isNumber).prefix(4))
-                            validationMessage = nil
-                        }
+                    G6CodeBoxField(
+                        text: $sensorCode,
+                        length: 4,
+                        allowedCharacters: .numeric,
+                        focused: $codeFieldFocused
+                    )
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 32)
+                    .onChange(of: sensorCode) {
+                        validationMessage = nil
+                        autoSubmitIfComplete()
+                    }
 
-                    if let validationMessage = validationMessage {
-                        Text(validationMessage)
-                            .font(.subheadline)
-                            .foregroundColor(.red)
-                            .fixedSize(horizontal: false, vertical: true)
+                    VStack(spacing: 6) {
+                        if let validationMessage = validationMessage {
+                            Text(validationMessage)
+                                .foregroundColor(.red)
+                        }
+                        if let scanFailedMessage = scanFailedMessage {
+                            Text(verbatim: scanFailedMessage)
+                                .foregroundColor(.red)
+                        }
+                    }
+                    .font(.subheadline)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity)
+
+                    if isScanAvailable {
+                        Button(action: scanTapped) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "barcode.viewfinder")
+                                Text(LocalizedString("Scan applicator code", comment: "Scan applicator barcode button"))
+                            }
+                            .font(.subheadline.weight(.semibold))
+                        }
+                        .frame(maxWidth: .infinity)
                     }
 
                     G6CalloutBox(
@@ -304,7 +542,7 @@ struct G6SensorCodeEntryView: View {
                 }
                 .padding()
             }
-            .onAppear { codeFieldFocused = true }
+            .onTapGesture { codeFieldFocused = false }
 
             VStack(spacing: 10) {
                 G6ContinueButton(
@@ -334,7 +572,113 @@ struct G6SensorCodeEntryView: View {
                 }
             }
         }
+        .sheet(isPresented: $showScanner) { scannerSheet }
+        .alert(
+            Text(LocalizedString("Camera access is off", comment: "Camera denied alert title")),
+            isPresented: $showCameraDeniedAlert
+        ) {
+            Button(action: {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }) { Text(LocalizedString("Open Settings", comment: "Open Settings button")) }
+            Button(role: .cancel, action: {}) { Text(LocalizedString("Cancel", comment: "Cancel button")) }
+        } message: {
+            Text(LocalizedString("Allow camera access in Settings to scan the Data Matrix code on your sensor applicator.", comment: "Camera denied alert message (sensor code)"))
+        }
     }
+
+    /// A complete code submits itself when it is a known factory code,
+    /// typed or scanned. Unknown codes show the validation message instead
+    /// of advancing.
+    private func autoSubmitIfComplete() {
+        guard sensorCode.count == 4 else {
+            return
+        }
+        guard SensorCode(sensorCode) != nil else {
+            validationMessage = LocalizedString("That code isn't one this app recognizes. Check the digits on the applicator label, or start without a code.", comment: "Validation message for unrecognized sensor code")
+            return
+        }
+        codeFieldFocused = false
+        let submitted = sensorCode
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            guard sensorCode == submitted else { return }
+            didSubmit(submitted)
+        }
+    }
+
+    // MARK: - Package scanning
+
+    /// The camera scanner needs hardware support and a camera usage
+    /// description; the simulator gets the demo-payload stand-in instead
+    /// (see `G6DemoScan`).
+    private var isScanAvailable: Bool {
+        #if targetEnvironment(simulator)
+        return true
+        #else
+        return G6PackageScannerView.isSupported
+        #endif
+    }
+
+    private func scanTapped() {
+        #if targetEnvironment(simulator)
+        handleScan(G6DemoScan.applicator)
+        #else
+        switch G6PackageScannerView.cameraAuthorization {
+        case .authorized:
+            showScanner = true
+        case .notDetermined:
+            G6PackageScannerView.requestCameraAccess { granted in
+                if granted {
+                    showScanner = true
+                } else {
+                    showCameraDeniedAlert = true
+                }
+            }
+        default:
+            showCameraDeniedAlert = true
+        }
+        #endif
+    }
+
+    private func handleScan(_ scan: G6PackageScan) {
+        showScanner = false
+        scanFailedMessage = nil
+
+        // Applicator labels carry no GTIN, so unlike the transmitter-ID
+        // screen there is no Dexcom-package gate: either a sensor code
+        // falls out of the payload or it does not.
+        guard let candidate = scan.sensorCodeCandidate else {
+            scanFailedMessage = LocalizedString("Couldn't find a sensor code in that barcode. The code is in the Data Matrix on the applicator, not the sensor box.", comment: "Scanned barcode without a sensor code")
+            return
+        }
+
+        // Assigning the field fires the auto-submit path, same as typing.
+        sensorCode = candidate
+    }
+
+    private func handleScanStartFailure(_: Error) {
+        showScanner = false
+        scanFailedMessage = LocalizedString("The camera couldn't start. Try again or type the code manually.", comment: "Scanner failed to start")
+    }
+
+    private var scannerSheet: some View {
+        NavigationView {
+            G6PackageScannerView(onScan: handleScan, onStartFailure: handleScanStartFailure)
+                .edgesIgnoringSafeArea(.all)
+                .navigationTitle(Text(LocalizedString("Scan applicator code", comment: "Scanner screen title (sensor code)")))
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(action: { showScanner = false }) {
+                            Text(LocalizedString("Cancel", comment: "Cancel button"))
+                        }
+                    }
+                }
+        }
+    }
+
+    // MARK: - Submit
 
     private func submit() {
         guard SensorCode(sensorCode) != nil else {
