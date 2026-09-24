@@ -131,6 +131,24 @@ public struct G6CGMManagerState: RawRepresentable {
         return millivolts <= Self.batteryVeryLowMillivolts
     }
 
+    /// Headline battery level for the settings row.
+    public enum BatteryLevel {
+        case unknown, high, low, veryLow
+    }
+
+    public var batteryLevel: BatteryLevel {
+        guard let millivolts = batteryVoltageBMillivolts else {
+            return .unknown
+        }
+        if millivolts <= Self.batteryVeryLowMillivolts {
+            return .veryLow
+        }
+        if millivolts <= Self.batteryLowMillivolts {
+            return .low
+        }
+        return .high
+    }
+
     public init(
         transmitterID: String,
         peripheralIdentifier: UUID? = nil,

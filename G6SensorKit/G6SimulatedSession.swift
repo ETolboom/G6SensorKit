@@ -48,6 +48,14 @@ extension G6CGMManager {
                 state.transmitterExpiryInDays = 180
                 state.firmwareVersion = "1.0.0.0 (simulated)"
                 state.peripheralIdentifier = UUID()
+                // A healthy battery, so the settings row renders and no
+                // low-battery alert fires.
+                state.batteryVoltageA = 295
+                state.batteryVoltageB = 282
+                state.batteryResistance = 700
+                state.batteryRuntimeDays = 12
+                state.batteryTemperature = 31
+                state.lastBatteryReadDate = now
             }
 
             self.scheduleSimulatedReadings()

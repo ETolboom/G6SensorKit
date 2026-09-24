@@ -4,8 +4,8 @@
 //
 //  Copyright © 2026 Nightscout Foundation. MIT License.
 //
-//  Calibration entry, transmitter details, Anubis session-length settings,
-//  and optional Dexcom Share upload configuration.
+//  Calibration entry, transmitter and battery details, Anubis session-length
+//  settings, and optional Dexcom Share upload configuration.
 //
 
 import SwiftUI
@@ -353,7 +353,10 @@ struct G6TransmitterDetailsView: View {
             }
 
             Section {
-                row(LocalizedString("Model", comment: "Transmitter detail label for model"), cgmManager.state.deviceModel)
+                row(
+                    LocalizedString("Model", comment: "Transmitter detail label for model"),
+                    cgmManager.state.isAnubis ? "Anubis" : cgmManager.state.deviceModel
+                )
                 row(LocalizedString("Transmitter ID", comment: "Transmitter detail label for ID"), cgmManager.state.transmitterID)
                 row(
                     LocalizedString("Firmware", comment: "Transmitter detail label for firmware"),
@@ -390,56 +393,72 @@ struct G6TransmitterDetailsView: View {
                 }
             }
 
-            batterySection
         }
         .listStyle(.insetGrouped)
     }
 
-    @ViewBuilder
-    private var batterySection: some View {
-        if let voltageA = cgmManager.state.batteryVoltageAMillivolts,
-           let voltageB = cgmManager.state.batteryVoltageBMillivolts {
-            Section {
-                row(
-                    LocalizedString("Voltage A", comment: "Transmitter detail label for battery A"),
-                    String(format: LocalizedString("%d mV", comment: "Voltage in millivolts (1: millivolts)"), voltageA)
-                )
-                HStack {
-                    Text(LocalizedString("Voltage B", comment: "Transmitter detail label for battery B"))
-                    Spacer()
-                    Text(String(format: LocalizedString("%d mV", comment: "Voltage in millivolts (1: millivolts)"), voltageB))
-                        .foregroundColor(cgmManager.state.isBatteryLow ? .orange : .secondary)
-                }
-                if let resistance = cgmManager.state.batteryResistance {
+    private func row(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label)
+            Spacer()
+            Text(value).foregroundColor(.secondary)
+        }
+    }
+}
+
+// MARK: - Battery details
+
+struct G6BatteryDetailsView: View {
+
+    let cgmManager: G6CGMManager
+
+    var body: some View {
+        List {
+            if let voltageA = cgmManager.state.batteryVoltageAMillivolts,
+               let voltageB = cgmManager.state.batteryVoltageBMillivolts {
+                Section {
                     row(
-                        LocalizedString("Resistance", comment: "Transmitter detail label for battery resistance"),
-                        String(Int(resistance))
+                        LocalizedString("Voltage A", comment: "Transmitter detail label for battery A"),
+                        String(format: LocalizedString("%d mV", comment: "Voltage in millivolts (1: millivolts)"), voltageA)
                     )
-                }
-                if let temperature = cgmManager.state.batteryTemperature {
-                    row(
-                        LocalizedString("Temperature", comment: "Transmitter detail label for temperature"),
-                        String(format: LocalizedString("%d °C", comment: "Temperature in Celsius (1: degrees)"), temperature)
-                    )
-                }
-                if let read = cgmManager.state.lastBatteryReadDate {
-                    row(
-                        LocalizedString("Last checked", comment: "Transmitter detail label for last battery read"),
-                        read.formatted(date: .abbreviated, time: .shortened)
-                    )
-                }
-            } header: {
-                Text(LocalizedString("Battery", comment: "Transmitter details section header for battery"))
-            } footer: {
-                if cgmManager.state.isBatteryVeryLow {
-                    Text(LocalizedString("Voltage B is very low. This transmitter may stop sending readings at any time, even during a session. Replace it as soon as you can.", comment: "Footer shown when battery B is very low"))
-                } else if cgmManager.state.isBatteryLow {
-                    Text(LocalizedString("Voltage B is getting low. The transmitter should finish the sensor you are wearing, but order a replacement now.", comment: "Footer shown when battery B is low"))
-                } else {
-                    Text(LocalizedString("Battery B is the cell that runs down first and determines whether the transmitter can finish a session.", comment: "Footer explaining what battery B means"))
+                    HStack {
+                        Text(LocalizedString("Voltage B", comment: "Transmitter detail label for battery B"))
+                        Spacer()
+                        Text(String(format: LocalizedString("%d mV", comment: "Voltage in millivolts (1: millivolts)"), voltageB))
+                            .foregroundColor(cgmManager.state.isBatteryLow ? .orange : .secondary)
+                    }
+                    if let resistance = cgmManager.state.batteryResistance {
+                        row(
+                            LocalizedString("Resistance", comment: "Transmitter detail label for battery resistance"),
+                            String(Int(resistance))
+                        )
+                    }
+                    if let temperature = cgmManager.state.batteryTemperature {
+                        row(
+                            LocalizedString("Temperature", comment: "Transmitter detail label for temperature"),
+                            String(format: LocalizedString("%d °C", comment: "Temperature in Celsius (1: degrees)"), temperature)
+                        )
+                    }
+                    if let read = cgmManager.state.lastBatteryReadDate {
+                        row(
+                            LocalizedString("Last checked", comment: "Transmitter detail label for last battery read"),
+                            read.formatted(date: .abbreviated, time: .shortened)
+                        )
+                    }
+                } header: {
+                    Text(LocalizedString("Battery", comment: "Transmitter details section header for battery"))
+                } footer: {
+                    if cgmManager.state.isBatteryVeryLow {
+                        Text(LocalizedString("Voltage B is very low. This transmitter may stop sending readings at any time, even during a session. Replace it as soon as you can.", comment: "Footer shown when battery B is very low"))
+                    } else if cgmManager.state.isBatteryLow {
+                        Text(LocalizedString("Voltage B is getting low. The transmitter should finish the sensor you are wearing, but order a replacement now.", comment: "Footer shown when battery B is low"))
+                    } else {
+                        Text(LocalizedString("Battery B is the cell that runs down first and determines whether the transmitter can finish a session.", comment: "Footer explaining what battery B means"))
+                    }
                 }
             }
         }
+        .listStyle(.insetGrouped)
     }
 
     private func row(_ label: String, _ value: String) -> some View {
@@ -457,41 +476,65 @@ struct G6SensorLifeSettingsView: View {
 
     let cgmManager: G6CGMManager
 
-    @State private var days: Double
+    @State private var days: Int
+    @State private var savedDays: Int
 
     init(cgmManager: G6CGMManager) {
         self.cgmManager = cgmManager
-        _days = State(initialValue: Double(cgmManager.state.sensorLifeDays))
+        let initial = cgmManager.state.sensorLifeDays
+        _days = State(initialValue: initial)
+        _savedDays = State(initialValue: initial)
     }
 
-    private var range: ClosedRange<Double> {
-        let bounds = TransmitterManagerState.sensorLifeDaysRange
-        return Double(bounds.lowerBound)...Double(bounds.upperBound)
+    private var isDirty: Bool {
+        return days != savedDays
     }
 
     var body: some View {
         List {
             Section {
-                VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text(LocalizedString("Session length", comment: "Session length picker label"))
+                    Spacer()
                     Text(String(
-                        format: LocalizedString("Session length: %d days", comment: "Session length value (1: day count)"),
-                        Int(days)
+                        format: LocalizedString("%d days", comment: "Session length value (1: day count)"),
+                        savedDays
                     ))
-                    .font(.headline)
-
-                    Slider(value: $days, in: range, step: 1) { editing in
-                        if !editing {
-                            cgmManager.setSensorLifeDays(Int(days))
-                        }
-                    }
+                    .foregroundColor(.secondary)
                 }
-            } header: {
-                Text(LocalizedString("Session Length", comment: "Section header for session length"))
+
+                Picker(selection: $days) {
+                    ForEach(TransmitterManagerState.sensorLifeDaysRange, id: \.self) { value in
+                        Text(String(
+                            format: LocalizedString("%d days", comment: "Session length option (1: day count)"),
+                            value
+                        ))
+                        .tag(value)
+                    }
+                } label: {
+                    Text(LocalizedString("Session length", comment: "Session length picker label"))
+                }
+                .pickerStyle(.wheel)
+                .labelsHidden()
             } footer: {
                 Text(LocalizedString("Modified transmitters can keep a sensor running past the standard 10 days. This setting only changes when this app treats the session as finished; it does not change the sensor's accuracy. Sensor readings can drift the longer a sensor is worn, so check against a fingerstick meter if a reading does not match how you feel.", comment: "Footer explaining extended session length and its accuracy caveat"))
             }
+
+            // Applied explicitly: a wheel picker fires intermediate values
+            // while scrolling, and each write hits persistent state.
+            Button(action: save) {
+                Text(LocalizedString("Save", comment: "Save session length button"))
+            }
+            .disabled(!isDirty)
+            .buttonStyle(G6PrimaryButtonStyle())
+            .listRowInsets(EdgeInsets())
         }
         .listStyle(.insetGrouped)
+    }
+
+    private func save() {
+        cgmManager.setSensorLifeDays(days)
+        savedDays = days
     }
 }
 

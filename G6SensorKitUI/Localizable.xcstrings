@@ -124,7 +124,7 @@
       "extractionState": "manual"
     },
     "Battery": {
-      "comment": "Transmitter details section header for battery",
+      "comment": "Navigation title for battery details",
       "extractionState": "manual"
     },
     "Battery B is the cell that runs down first and determines whether the transmitter can finish a session.": {
@@ -587,10 +587,6 @@
       "comment": "Navigation title for sensor life settings",
       "extractionState": "manual"
     },
-    "Session length: %d days": {
-      "comment": "Session length value (1: day count)",
-      "extractionState": "manual"
-    },
     "Session stopped": {
       "comment": "Algorithm state: stopped",
       "extractionState": "manual"
@@ -930,6 +926,26 @@
     "Calibrating compares your fingerstick to the current reading, which only works when your glucose is steady. Wait for a flat trend arrow (→), then calibrate.": {
       "extractionState": "manual",
       "comment": "Calibration unavailable while trend is not flat: explanation"
+    },
+    "Session length": {
+      "extractionState": "manual",
+      "comment": "Session length picker label"
+    },
+    "High": {
+      "extractionState": "manual",
+      "comment": "Battery level: high"
+    },
+    "Low": {
+      "extractionState": "manual",
+      "comment": "Battery level: low"
+    },
+    "Replace Now": {
+      "extractionState": "manual",
+      "comment": "Battery level: very low, replace transmitter"
+    },
+    "Save": {
+      "extractionState": "manual",
+      "comment": "Save session length button"
     }
   },
   "version": "1.1"

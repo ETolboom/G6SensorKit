@@ -22,6 +22,7 @@ final class G6SettingsViewModel: ObservableObject, G6CGMManagerObserver {
 
     let toCalibration: () -> Void
     let toTransmitterDetails: () -> Void
+    let toBatteryDetails: () -> Void
     let toSensorLifeSettings: () -> Void
     let toShareUpload: () -> Void
     let toReadingDetail: () -> Void
@@ -35,6 +36,7 @@ final class G6SettingsViewModel: ObservableObject, G6CGMManagerObserver {
         cgmManager: G6CGMManager,
         toCalibration: @escaping () -> Void,
         toTransmitterDetails: @escaping () -> Void,
+        toBatteryDetails: @escaping () -> Void,
         toSensorLifeSettings: @escaping () -> Void,
         toShareUpload: @escaping () -> Void,
         toReadingDetail: @escaping () -> Void,
@@ -46,6 +48,7 @@ final class G6SettingsViewModel: ObservableObject, G6CGMManagerObserver {
         state = cgmManager.state
         self.toCalibration = toCalibration
         self.toTransmitterDetails = toTransmitterDetails
+        self.toBatteryDetails = toBatteryDetails
         self.toSensorLifeSettings = toSensorLifeSettings
         self.toShareUpload = toShareUpload
         self.toReadingDetail = toReadingDetail
@@ -180,6 +183,22 @@ final class G6SettingsViewModel: ObservableObject, G6CGMManagerObserver {
         state.sensorStartDate != nil && !state.isInWarmup
     }
 
+    /// Headline battery level for the settings row; nil until the first
+    /// battery read, so the row stays hidden for transmitters we have
+    /// never heard battery from.
+    var batteryLevelText: String? {
+        switch state.batteryLevel {
+        case .unknown:
+            return nil
+        case .high:
+            return LocalizedString("High", comment: "Battery level: high")
+        case .low:
+            return LocalizedString("Low", comment: "Battery level: low")
+        case .veryLow:
+            return LocalizedString("Replace Now", comment: "Battery level: very low, replace transmitter")
+        }
+    }
+
     var canStartSensor: Bool {
         state.sensorStartDate == nil
     }
@@ -252,7 +271,11 @@ struct G6SettingsView: View {
         Section {
             HStack {
                 Spacer()
-                G6TransmitterImage(size: 200, isActive: viewModel.phase == .active)
+                G6TransmitterImage(
+                    size: 200,
+                    isActive: viewModel.phase == .active,
+                    assetName: viewModel.state.isAnubis ? "anubis" : "G6Transmitter"
+                )
                 Spacer()
             }
             .listRowBackground(Color.clear)
@@ -457,6 +480,21 @@ struct G6SettingsView: View {
             }
 
             navRow(LocalizedString("Transmitter Details", comment: "Row to transmitter details"), "cpu", viewModel.toTransmitterDetails)
+
+            if let batteryLevel = viewModel.batteryLevelText {
+                Button(action: viewModel.toBatteryDetails) {
+                    HStack {
+                        Label(LocalizedString("Battery", comment: "Row to transmitter battery details"), systemImage: "battery.75")
+                        Spacer()
+                        Text(batteryLevel)
+                            .foregroundColor(.secondary)
+                        Image(systemName: "chevron.right")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .buttonStyle(G6RowButtonStyle())
+            }
 
             if viewModel.state.isAnubis {
                 navRow(LocalizedString("Session Length", comment: "Row to session length settings"), "calendar", viewModel.toSensorLifeSettings)

@@ -411,9 +411,10 @@ struct G6SensorCodeLabelGlyph: View {
 struct G6TransmitterImage: View {
     var size: CGFloat = 88
     var isActive: Bool = true
+    var assetName: String = "G6Transmitter"
 
     var body: some View {
-        if let image = UIImage(named: "G6Transmitter", in: Bundle(for: G6UICoordinator.self), compatibleWith: nil) {
+        if let image = UIImage(named: assetName, in: Bundle(for: G6UICoordinator.self), compatibleWith: nil) {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFit()

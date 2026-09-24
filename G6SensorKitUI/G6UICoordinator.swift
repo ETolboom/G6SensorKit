@@ -30,6 +30,7 @@ enum G6UIScreen {
     case settings
     case calibration
     case transmitterDetails
+    case batteryDetails
     case sensorLifeSettings
     case shareUpload
     case readingDetail
@@ -408,6 +409,7 @@ public class G6UICoordinator: UINavigationController, CGMManagerOnboarding, Comp
                         cgmManager: cgmManager,
                         toCalibration: { [weak self] in self?.navigateTo(.calibration) },
                         toTransmitterDetails: { [weak self] in self?.navigateTo(.transmitterDetails) },
+                        toBatteryDetails: { [weak self] in self?.navigateTo(.batteryDetails) },
                         toSensorLifeSettings: { [weak self] in self?.navigateTo(.sensorLifeSettings) },
                         toShareUpload: { [weak self] in self?.navigateTo(.shareUpload) },
                         toReadingDetail: { [weak self] in self?.navigateTo(.readingDetail) },
@@ -456,6 +458,15 @@ public class G6UICoordinator: UINavigationController, CGMManagerOnboarding, Comp
                     onPairNewTransmitter: { [weak self] in self?.beginTransmitterReplacement() }
                 ),
                 title: LocalizedString("Transmitter", comment: "Navigation title for transmitter details")
+            )
+
+        case .batteryDetails:
+            guard let cgmManager = cgmManager else {
+                return UIViewController()
+            }
+            return hostingController(
+                rootView: G6BatteryDetailsView(cgmManager: cgmManager),
+                title: LocalizedString("Battery", comment: "Navigation title for battery details")
             )
 
         case .sensorLifeSettings:
