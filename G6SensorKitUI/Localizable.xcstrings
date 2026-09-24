@@ -898,6 +898,38 @@
     "The camera couldn't start. Try again or type the code manually.": {
       "extractionState": "manual",
       "comment": "Scanner failed to start"
+    },
+    "Current sensor reading": {
+      "extractionState": "manual",
+      "comment": "Calibration: current reading label"
+    },
+    "Large calibration change": {
+      "extractionState": "manual",
+      "comment": "Calibration deviation warning title"
+    },
+    "Send Anyway": {
+      "extractionState": "manual",
+      "comment": "Confirm calibration despite large deviation"
+    },
+    "This is %1$@ away from the current sensor reading. A change this large can be bad for sensor accuracy; try to limit each calibration to at most %2$@ at a time.": {
+      "extractionState": "manual",
+      "comment": "Calibration deviation warning (1: deviation with unit, 2: recommended maximum with unit)"
+    },
+    "No recent sensor reading": {
+      "extractionState": "manual",
+      "comment": "Calibration unavailable: title"
+    },
+    "Calibrating compares your fingerstick to what the sensor reads right now, so it needs a recent reading. Wait for the next reading, then calibrate.": {
+      "extractionState": "manual",
+      "comment": "Calibration unavailable: explanation"
+    },
+    "Glucose is changing": {
+      "extractionState": "manual",
+      "comment": "Calibration unavailable while trend is not flat: title"
+    },
+    "Calibrating compares your fingerstick to the current reading, which only works when your glucose is steady. Wait for a flat trend arrow (→), then calibrate.": {
+      "extractionState": "manual",
+      "comment": "Calibration unavailable while trend is not flat: explanation"
     }
   },
   "version": "1.1"

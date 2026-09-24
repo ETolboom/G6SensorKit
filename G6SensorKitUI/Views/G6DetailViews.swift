@@ -17,19 +17,98 @@ import G6SensorCore
 
 // MARK: - Calibration
 
+/// Keeps the calibration screen's "current reading" live. State updates
+/// alone are not enough: they only arrive WITH a reading, so without the
+/// tick a disconnected transmitter would leave an old reading looking
+/// fresh forever.
+final class G6CalibrationViewModel: ObservableObject, G6CGMManagerObserver {
+    @Published private(set) var latestReading: G6StoredReading?
+    @Published private(set) var now = Date()
+
+    private var tick: Timer?
+
+    init(cgmManager: G6CGMManager) {
+        latestReading = cgmManager.state.latestReading
+        cgmManager.addStateObserver(self)
+
+        let timer = Timer(timeInterval: 30, repeats: true) { [weak self] _ in
+            self?.now = Date()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        tick = timer
+    }
+
+    deinit {
+        tick?.invalidate()
+    }
+
+    func g6CGMManagerDidUpdateState(_ manager: G6CGMManager) {
+        DispatchQueue.main.async {
+            self.latestReading = manager.state.latestReading
+        }
+    }
+
+    /// Readings arrive every 5 minutes; one missed reading closes the gate.
+    /// The extra 30 seconds absorb delivery jitter so a slightly late reading
+    /// does not flicker the gate.
+    static let readingFreshnessInterval: TimeInterval = .minutes(5.5)
+
+    /// Why calibration is or is not currently possible.
+    enum Readiness {
+        case ready
+        case noFreshReading
+        case notFlat
+    }
+
+    var freshReading: G6StoredReading? {
+        guard let reading = latestReading,
+              now.timeIntervalSince(reading.date) <= Self.readingFreshnessInterval
+        else {
+            return nil
+        }
+        return reading
+    }
+
+    /// Calibrating teaches the sensor from the difference between the
+    /// fingerstick and the current reading; a reading that is moving cannot
+    /// be compared fairly, so calibration requires a flat trend.
+    var readiness: Readiness {
+        guard let reading = freshReading else {
+            return .noFreshReading
+        }
+        guard G6TrendArrow(dexcomRateMgDLPerMinute: reading.trendRateMgDLPerMinute) == .flat else {
+            return .notFlat
+        }
+        return .ready
+    }
+}
+
 struct G6CalibrationView: View {
 
     let cgmManager: G6CGMManager
     let didSubmit: () -> Void
 
+    @StateObject private var viewModel: G6CalibrationViewModel
+
     @State private var entry: String = ""
     @State private var validationMessage: String?
     @State private var showingGuide = false
+    @State private var showingDeviationWarning = false
 
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
 
     private static let minimumMgDL: Double = 40
     private static let maximumMgDL: Double = 400
+
+    /// Deviation from the current reading at or beyond which the big-change
+    /// warning shows (mg/dL).
+    private static let largeDeviationWarningMgDL: Double = 40
+
+    init(cgmManager: G6CGMManager, didSubmit: @escaping () -> Void) {
+        self.cgmManager = cgmManager
+        self.didSubmit = didSubmit
+        _viewModel = StateObject(wrappedValue: G6CalibrationViewModel(cgmManager: cgmManager))
+    }
 
     private var unit: HKUnit {
         return displayGlucosePreference.unit
@@ -45,6 +124,38 @@ struct G6CalibrationView: View {
 
     private func quantity(fromMgDL value: Double) -> HKQuantity {
         return HKQuantity(unit: .milligramsPerDeciliter, doubleValue: value)
+    }
+
+    private func formatted(mgdl value: Double) -> String {
+        return displayGlucosePreference.format(quantity(fromMgDL: value))
+    }
+
+    /// Latest sensor reading in mg/dL, if one exists and is fresh enough to
+    /// calibrate against.
+    private var currentValueMgDL: Double? {
+        return viewModel.freshReading?.glucoseMgDL
+    }
+
+    private var isCalibrationBlocked: Bool {
+        return viewModel.readiness != .ready
+    }
+
+    private var enteredMgDL: Double? {
+        let normalized = entry.replacingOccurrences(of: decimalSeparator, with: ".")
+        return Double(normalized).map {
+            HKQuantity(unit: unit, doubleValue: $0).doubleValue(for: .milligramsPerDeciliter)
+        }
+    }
+
+    private var deviationMgDL: Double? {
+        guard let entered = enteredMgDL, let current = currentValueMgDL else {
+            return nil
+        }
+        return abs(entered - current)
+    }
+
+    private var showsLargeDeviationWarning: Bool {
+        return (deviationMgDL ?? 0) >= Self.largeDeviationWarningMgDL
     }
 
     private func sanitize(_ input: String) -> String {
@@ -84,13 +195,26 @@ struct G6CalibrationView: View {
                         }
                     }
 
+                    HStack {
+                        Text(LocalizedString("Current sensor reading", comment: "Calibration: current reading label"))
+                        Spacer()
+                        if let current = currentValueMgDL {
+                            Text(formatted(mgdl: current))
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text(LocalizedString("—", comment: "Placeholder for missing value"))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .font(.subheadline)
+
                     TextField(unit.localizedShortUnitString, text: $entry)
                         .keyboardType(usesDecimals ? .decimalPad : .numberPad)
                         .font(.title3.monospaced())
                         .padding()
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(10)
-                        .onChange(of: entry) { newValue in
+                        .onChange(of: entry) { _, newValue in
                             let sanitized = sanitize(newValue)
                             if sanitized != newValue {
                                 entry = sanitized
@@ -112,33 +236,74 @@ struct G6CalibrationView: View {
                         body: LocalizedString("The calibration is sent the next time your transmitter connects, which can be up to 5 minutes away. The transmitter may accept it, ask for a second value, or reject it — this screen's status will tell you which.", comment: "Calibration callout body about delivery timing")
                     )
 
+                    switch viewModel.readiness {
+                    case .ready:
+                        EmptyView()
+                    case .noFreshReading:
+                        G6CalloutBox(
+                            symbolName: "exclamationmark.triangle.fill",
+                            tint: .orange,
+                            title: LocalizedString("No recent sensor reading", comment: "Calibration unavailable: title"),
+                            body: LocalizedString("Calibrating compares your fingerstick to what the sensor reads right now, so it needs a recent reading. Wait for the next reading, then calibrate.", comment: "Calibration unavailable: explanation")
+                        )
+                    case .notFlat:
+                        G6CalloutBox(
+                            symbolName: "exclamationmark.triangle.fill",
+                            tint: .orange,
+                            title: LocalizedString("Glucose is changing", comment: "Calibration unavailable while trend is not flat: title"),
+                            body: LocalizedString("Calibrating compares your fingerstick to the current reading, which only works when your glucose is steady. Wait for a flat trend arrow (→), then calibrate.", comment: "Calibration unavailable while trend is not flat: explanation")
+                        )
+                    }
+
                 }
                 .padding()
             }
 
-            Button(action: submit) {
+            Button(action: submitTapped) {
                 Text(LocalizedString("Send Calibration", comment: "Calibration submit button"))
                     .frame(maxWidth: .infinity, minHeight: 44)
             }
             .buttonStyle(G6PrimaryButtonStyle())
-            .disabled(entry.isEmpty)
+            .disabled(entry.isEmpty || isCalibrationBlocked)
             .padding()
         }
         .sheet(isPresented: $showingGuide) {
             G6CalibrationGuideView(onDone: { showingGuide = false })
         }
+        .alert(
+            Text(LocalizedString("Large calibration change", comment: "Calibration deviation warning title")),
+            isPresented: $showingDeviationWarning
+        ) {
+            Button(role: .cancel, action: {}) {
+                Text(LocalizedString("Cancel", comment: "Cancel button"))
+            }
+            Button(action: submit) {
+                Text(LocalizedString("Send Anyway", comment: "Confirm calibration despite large deviation"))
+            }
+        } message: {
+            Text(String(
+                format: LocalizedString("This is %1$@ away from the current sensor reading. A change this large can be bad for sensor accuracy; try to limit each calibration to at most %2$@ at a time.", comment: "Calibration deviation warning (1: deviation with unit, 2: recommended maximum with unit)"),
+                formatted(mgdl: deviationMgDL ?? 0),
+                formatted(mgdl: Self.largeDeviationWarningMgDL)
+            ))
+        }
+    }
+
+    private func submitTapped() {
+        // A large jump from the current reading gets a confirmation first;
+        // big corrections can teach the sensor the wrong thing.
+        guard showsLargeDeviationWarning else {
+            submit()
+            return
+        }
+        showingDeviationWarning = true
     }
 
     private func submit() {
-        let normalized = entry.replacingOccurrences(of: decimalSeparator, with: ".")
-
-        guard let entered = Double(normalized) else {
+        guard let valueMgDL = enteredMgDL else {
             validationMessage = LocalizedString("Enter a number.", comment: "Validation message for non-numeric calibration entry")
             return
         }
-
-        let valueMgDL = HKQuantity(unit: unit, doubleValue: entered)
-            .doubleValue(for: .milligramsPerDeciliter)
 
         guard (Self.minimumMgDL...Self.maximumMgDL).contains(valueMgDL) else {
             validationMessage = String(
