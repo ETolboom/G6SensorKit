@@ -975,6 +975,18 @@
       "extractionState": "manual",
       "comment": "Footer explaining direct mode"
     },
+    "Switch to direct mode?": {
+      "extractionState": "manual",
+      "comment": "Confirmation title for turning passive mode off"
+    },
+    "Switch to Direct Mode": {
+      "extractionState": "manual",
+      "comment": "Confirm turning passive mode off"
+    },
+    "Close the Dexcom app and turn off its Bluetooth access, or delete it, before switching. Only one app on this phone can talk to the transmitter; if the Dexcom app is still connected, the two will interfere and readings can be lost.": {
+      "extractionState": "manual",
+      "comment": "Warning shown before turning passive mode off"
+    },
     "Sessions and calibrations are managed in the Dexcom app while passive mode is on.": {
       "extractionState": "manual",
       "comment": "Explanation replacing the session action buttons in passive mode"

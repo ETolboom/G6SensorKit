@@ -332,6 +332,8 @@ struct G6TransmitterDetailsView: View {
     /// rebuilds the session as the other kind.
     @State private var passiveModeEnabled = false
 
+    @State private var showingDirectModeConfirmation = false
+
     var body: some View {
         List {
             // Top of the transmitter screen, matching where the
@@ -357,13 +359,30 @@ struct G6TransmitterDetailsView: View {
             }
 
             Section {
-                Toggle(LocalizedString("Passive Mode", comment: "Toggle label for passive (listen-only) mode"), isOn: $passiveModeEnabled)
-                    .onChange(of: passiveModeEnabled) { newValue in
-                        guard newValue != cgmManager.state.passiveModeEnabled else {
-                            return
+                // Turning passive off is confirmed before the switch: a direct
+                // session connects straight away, and two clients talking to
+                // the transmitter from one phone interfere with each other.
+                Toggle(LocalizedString("Passive Mode", comment: "Toggle label for passive (listen-only) mode"), isOn: Binding(
+                    get: { passiveModeEnabled },
+                    set: { newValue in
+                        if newValue {
+                            setPassiveModeEnabled(true)
+                        } else {
+                            showingDirectModeConfirmation = true
                         }
-                        cgmManager.setPassiveModeEnabled(newValue)
                     }
+                ))
+                .confirmationDialog(
+                    LocalizedString("Switch to direct mode?", comment: "Confirmation title for turning passive mode off"),
+                    isPresented: $showingDirectModeConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    Button(LocalizedString("Switch to Direct Mode", comment: "Confirm turning passive mode off")) {
+                        setPassiveModeEnabled(false)
+                    }
+                } message: {
+                    Text(LocalizedString("Close the Dexcom app and turn off its Bluetooth access, or delete it, before switching. Only one app on this phone can talk to the transmitter; if the Dexcom app is still connected, the two will interfere and readings can be lost.", comment: "Warning shown before turning passive mode off"))
+                }
             } header: {
                 Text(LocalizedString("Connection", comment: "Transmitter details section header for connection mode"))
             } footer: {
@@ -418,6 +437,11 @@ struct G6TransmitterDetailsView: View {
         }
         .listStyle(.insetGrouped)
         .onAppear { passiveModeEnabled = cgmManager.state.passiveModeEnabled }
+    }
+
+    private func setPassiveModeEnabled(_ enabled: Bool) {
+        passiveModeEnabled = enabled
+        cgmManager.setPassiveModeEnabled(enabled)
     }
 
     private func row(_ label: String, _ value: String) -> some View {
