@@ -7,8 +7,9 @@
 //  Copyright © 2015 Nathan Racklyeft. All rights reserved. (MIT License)
 //
 //  Adaptations (behavioural reference: xDrip4iOS — no code copied):
-//  - Active/native mode ONLY: the passive "observe another app's session"
-//    path is removed by design. G6SensorKit owns the transmitter.
+//  - Active/native mode: this session owns the transmitter. The passive
+//    "observe another app's session" mode lives separately in
+//    PassiveTransmitterSession.
 //  - Per-connection flow follows the Firefly ordering: authenticate →
 //    bond if needed → subscribe control + backfill → time → pending
 //    commands (session stop / session start / calibrate / reset) →
@@ -25,42 +26,70 @@ import CoreBluetooth
 import os.log
 
 
+/// The surface shared by the active (`TransmitterSession`) and passive
+/// (`PassiveTransmitterSession`) sessions, so the integration layer can hold
+/// either without knowing which one is driving the radio.
+public protocol TransmitterSessioning: AnyObject {
+    /// The ID of the transmitter the session connects to.
+    var ID: String { get }
+
+    /// Called on a private background queue. It is the responsibility of the
+    /// client to ensure thread-safety.
+    var delegate: TransmitterSessionDelegate? { get set }
+
+    /// The known peripheral identifier; persist it to skip rediscovery.
+    var peripheralIdentifier: UUID? { get set }
+
+    /// Starts (or resumes) looking for the transmitter. Idempotent.
+    func start()
+
+    /// Stops the reconnect loop and drops any live connection.
+    func stop()
+
+    /// Points the session at a different transmitter, keeping the existing
+    /// connection and its central manager.
+    func retarget(id: String)
+}
+
+/// These methods are called on a private background queue. It is the responsibility of the client to ensure thread-safety.
 public protocol TransmitterSessionDelegate: AnyObject {
-    func transmitterSessionDidConnect(_ session: TransmitterSession)
+    func transmitterSessionDidConnect(_ session: any TransmitterSessioning)
 
-    func transmitterSession(_ session: TransmitterSession, didError error: Error)
+    func transmitterSession(_ session: any TransmitterSessioning, didError error: Error)
 
-    func transmitterSession(_ session: TransmitterSession, didRead glucose: Glucose)
+    func transmitterSession(_ session: any TransmitterSessioning, didRead glucose: Glucose)
 
-    func transmitterSession(_ session: TransmitterSession, didReadBackfill glucose: [Glucose])
+    func transmitterSession(_ session: any TransmitterSessioning, didReadBackfill glucose: [Glucose])
 
-    func transmitterSession(_ session: TransmitterSession, didReadTransmitterVersion message: TransmitterVersionRxMessage)
+    func transmitterSession(_ session: any TransmitterSessioning, didReadTransmitterVersion message: TransmitterVersionRxMessage)
 
-    func transmitterSession(_ session: TransmitterSession, didReadBattery message: BatteryStatusRxMessage)
+    func transmitterSession(_ session: any TransmitterSessioning, didReadBattery message: BatteryStatusRxMessage)
 
     /// The transmitter's clock was read, which means authentication
-    /// succeeded. Reported separately from glucose because a stopped or
+    /// succeeded — or, in a passive session, that another client's time read
+    /// was observed. Reported separately from glucose because a stopped or
     /// failed sensor produces no usable reading, and the app still needs to
     /// know it is talking to the transmitter.
-    func transmitterSession(_ session: TransmitterSession, didReadTransmitterTime activationDate: Date)
+    func transmitterSession(_ session: any TransmitterSessioning, didReadTransmitterTime activationDate: Date)
 
-    func transmitterSession(_ session: TransmitterSession, didReadUnknownData data: Data)
+    func transmitterSession(_ session: any TransmitterSessioning, didReadUnknownData data: Data)
 
     /// The known peripheral identifier changed; persist it.
-    func transmitterSession(_ session: TransmitterSession, didUpdatePeripheralIdentifier identifier: UUID?)
+    func transmitterSession(_ session: any TransmitterSessioning, didUpdatePeripheralIdentifier identifier: UUID?)
 
     /// A bond request was sent; the user must accept the iOS pairing prompt
-    /// within the keep-alive window (~60 s).
-    func transmitterSessionDidRequestBond(_ session: TransmitterSession)
+    /// within the keep-alive window (~60 s). Active sessions only — a
+    /// passive session never writes, so it never bonds.
+    func transmitterSessionDidRequestBond(_ session: any TransmitterSessioning)
 }
 
 /// These methods are called on a private background queue. It is the responsibility of the client to ensure thread-safety.
 public protocol TransmitterCommandSource: AnyObject {
-    func dequeuePendingCommand(for session: TransmitterSession) -> Command?
+    func dequeuePendingCommand(for session: any TransmitterSessioning) -> Command?
 
-    func transmitterSession(_ session: TransmitterSession, didFail command: Command, with error: Error)
+    func transmitterSession(_ session: any TransmitterSessioning, didFail command: Command, with error: Error)
 
-    func transmitterSession(_ session: TransmitterSession, didComplete command: Command, response: TransmitterRxMessage?)
+    func transmitterSession(_ session: any TransmitterSessioning, didComplete command: Command, response: TransmitterRxMessage?)
 }
 
 public enum TransmitterError: Error {
@@ -83,7 +112,7 @@ extension TransmitterError: CustomStringConvertible {
 }
 
 
-public final class TransmitterSession: TransmitterConnectionDelegate {
+public final class TransmitterSession: TransmitterSessioning, TransmitterConnectionDelegate {
 
     /// Seconds the transmitter is asked to keep the link alive while the user
     /// responds to the iOS pairing prompt.
@@ -401,11 +430,20 @@ public final class TransmitterSession: TransmitterConnectionDelegate {
     }
 
 
+    func transmitterConnection(_ connection: TransmitterConnection, didReceiveControlResponse response: Data) {
+        // Control responses to this session's own requests are claimed by
+        // the peripheral manager's conditions. Anything arriving here is
+        // another client's traffic, which an active session has no use for.
+    }
+
+    func transmitterConnection(_ connection: TransmitterConnection, didReceiveAuthenticationResponse response: Data) {
+        // See didReceiveControlResponse.
+    }
+
     func transmitterConnection(_ connection: TransmitterConnection, didReceiveBackfillResponse response: Data) {
         guard response.count > 2 else {
             return
         }
-
         backfillLock.lock()
         defer {
             backfillLock.broadcast()
@@ -701,14 +739,6 @@ fileprivate extension PeripheralManager {
             try setNotifyValue(false, for: .control)
             try writeMessage(DisconnectTxMessage(), for: .control)
         } catch {
-        }
-    }
-
-    func listenToCharacteristic(_ characteristic: CGMServiceCharacteristicUUID) throws {
-        do {
-            try setNotifyValue(true, for: characteristic)
-        } catch let error {
-            throw TransmitterError.controlError("Error enabling notification for \(characteristic): \(error)")
         }
     }
 }

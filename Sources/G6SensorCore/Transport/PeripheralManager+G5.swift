@@ -187,6 +187,17 @@ extension PeripheralManager {
 
         try writeValue(message.data, for: characteristic, type: type, timeout: timeout)
     }
+
+    /// Subscribes to a characteristic's notifications without expecting a
+    /// response to anything — the passive session's only use of the radio.
+    /// - Throws: TransmitterError.controlError
+    func listenToCharacteristic(_ characteristic: CGMServiceCharacteristicUUID) throws {
+        do {
+            try setNotifyValue(true, for: characteristic)
+        } catch let error {
+            throw TransmitterError.controlError("Error enabling notification for \(characteristic): \(error)")
+        }
+    }
 }
 
 
