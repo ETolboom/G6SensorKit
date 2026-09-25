@@ -86,12 +86,52 @@ building against `LoopKit/LoopKit`. Fork differences belong in `Common/`
 shims — never in `G6SensorCore`, which imports no LoopKit at all. A CI matrix
 building against both hosts at pinned SHAs is the only reliable guard.
 
+## Connection modes
+
+The manager runs in one of two modes, persisted as `passiveModeEnabled` in the
+manager state, chosen during onboarding and switchable afterwards under
+Transmitter details:
+
+- **Direct (default)**: G6SensorKit owns the transmitter — authentication,
+  bonding, session start/stop, calibrations, active backfill requests. The
+  manufacturer's app must not be connected to the same transmitter.
+- **Passive**: G6SensorKit never writes to the transmitter. It subscribes to
+  the authentication/control/backfill characteristics and decodes the traffic
+  of the session the manufacturer's app (or another bonded client on the same
+  phone) drives. Session commands, calibrations, battery reads and backfill
+  requests are unavailable; `enqueue(_:)` drops commands.
+
+`providesBLEHeartbeat` is `true` in direct mode and `false` in passive mode:
+in passive the manufacturer's app drives the cadence, so the host's own fetch
+timer must keep ticking.
+
+## Migration from CGMBLEKit
+
+`G6CGMManager.init?(rawState:)` accepts a rawState dictionary persisted by
+CGMBLEKit's `TransmitterManagerState` directly. A state is recognized as
+CGMBLEKit-shaped when `passiveModeEnabled` and `sensorLifeDays` are both
+absent (every G6SensorKit state carries both). Legacy key handling:
+
+| CGMBLEKit key | Handling |
+|---|---|
+| `transmitterID` | Required, same key |
+| `transmitterStartDate` | Same key |
+| `sensorStartOffset` (seconds since activation) | Mapped to `sensorStartDate = transmitterStartDate + offset` |
+| `transmitterExpiryInDays` | Same key (Int) |
+| `shouldSyncToRemoteService` | Same key |
+| *(absent)* | `passiveModeEnabled = true`, `isOnboarded = true` — CGMBLEKit ran passive-only, so migrated users keep exactly the behavior they had and never see onboarding |
+
+`peripheralIdentifier` starts nil and is learned on first connection, so the
+first launch after migration does one name-filtered scan.
+
 ## Safety notes for host maintainers
 
-- G6SensorKit owns the transmitter connection. Users must not run the
-  manufacturer's app against the same transmitter.
-- The manufacturer's app is not watching glucose while this driver is in use,
-  so high/low alerting is entirely the host's responsibility. Do not ship this
-  plugin in a host without working glucose alerts.
-- `providesBLEHeartbeat` is `true`. In Loop this suppresses the pump's timer
-  tick, so regressions in BLE wake-up affect loop cadence, not just CGM data.
+- In direct mode G6SensorKit owns the transmitter connection. Users must not
+  run the manufacturer's app against the same transmitter. In passive mode the
+  manufacturer's app is **required** on the same phone.
+- The manufacturer's app is not watching glucose while this driver is in use
+  in direct mode, so high/low alerting is entirely the host's responsibility.
+  Do not ship this plugin in a host without working glucose alerts.
+- `providesBLEHeartbeat` is `true` in direct mode. In Loop this suppresses
+  the pump's timer tick, so regressions in BLE wake-up affect loop cadence,
+  not just CGM data.

@@ -1,22 +1,32 @@
 # G6SensorKit
 
-A [LoopKit](https://github.com/LoopKit/LoopKit) CGMManager plugin that connects
-**directly and natively** to Dexcom G6 and Dexcom ONE transmitters over
-Bluetooth — an owning, active connection (authentication, session start/stop,
-sensor codes, calibration, backfill), usable by both
+A [LoopKit](https://github.com/LoopKit/LoopKit) CGMManager plugin for Dexcom G6
+and Dexcom ONE transmitters over Bluetooth, usable by both
 [Loop](https://github.com/LoopKit/Loop) and [Trio](https://github.com/nightscout/Trio)
-from this single repository.
+from this single repository. Two connection modes:
+
+- **Direct (default)** — an owning, active connection: authentication,
+  session start/stop, sensor codes, calibration, backfill.
+- **Passive** — listens to the session the official Dexcom app drives on the
+  same phone, like CGMBLEKit does in Loop. Users migrated from CGMBLEKit land
+  here automatically (see [Docs/HostIntegration.md](Docs/HostIntegration.md)).
 
 > **Status: pre-alpha, under active development. Do not use for therapy.**
 
 ## What "native" means
 
-Unlike existing drivers that passively read alongside the official Dexcom app,
-G6SensorKit *owns* the transmitter relationship: it performs the authentication
-handshake keyed on the transmitter ID, starts and stops sensor sessions
-(including 4-digit sensor codes), sends calibrations, and backfills missed
-readings after connectivity gaps. The official Dexcom app must **not** be used
-at the same time.
+In the default **direct** mode, G6SensorKit *owns* the transmitter
+relationship: it performs the authentication handshake keyed on the
+transmitter ID, starts and stops sensor sessions (including 4-digit sensor
+codes), sends calibrations, and backfills missed readings after connectivity
+gaps. The official Dexcom app must **not** be used at the same time.
+
+In **passive** mode the plugin never writes to the transmitter: it connects
+alongside the official Dexcom app and decodes the notification traffic of the
+session that app drives. Sessions, calibrations and sensor codes are then
+managed in the Dexcom app, and the Dexcom app is **required** — without it
+there is no traffic to observe. Backfill arrives only when the Dexcom app
+requests it.
 
 Supported: Dexcom G6 (`8…` transmitter IDs), Dexcom ONE (`5…`/`C…`), and
 Anubis-modified G6 transmitters (auto-detected, extended session length).
@@ -31,7 +41,7 @@ Not supported: Dexcom G5 (`4…` IDs — no longer in circulation), G7/ONE+
 | `G6SensorKit.framework` | LoopKit `CGMManager` conformance, state persistence, sample conversion |
 | `G6SensorKitUI.framework` | `CGMManagerUI`, onboarding and settings UI |
 | `G6SensorKitPlugin.loopplugin` | Plugin bundle discovered by Loop at runtime |
-| `Apps/G6SensorHarness` | Standalone proof-of-concept app exercising the core on a live transmitter |
+| `Apps/G6SensorHarness` | Standalone proof-of-concept app exercising both session modes on a live transmitter |
 
 ## License
 

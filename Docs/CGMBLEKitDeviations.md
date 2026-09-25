@@ -18,9 +18,10 @@ Nothing in the BLE layer comes from xDrip4iOS.
 | Ours | From | Changed |
 |---|---|---|
 | `Transport/PeripheralManager.swift` | `PeripheralManager.swift` | **0 lines of 471** — byte-identical |
-| `Transport/PeripheralManager+G5.swift` | `PeripheralManager+G5.swift` | +61 lines, **0 deletions** — purely additive |
-| `Transport/TransmitterConnection.swift` | `BluetoothManager.swift` | 350 → 352 lines; mostly renames, 2 substantive |
-| `Session/TransmitterSession.swift` | `Transmitter.swift` | heavily restructured — see below |
+| `Transport/PeripheralManager+G5.swift` | `PeripheralManager+G5.swift` | +75 lines, **0 deletions** — purely additive |
+| `Transport/TransmitterConnection.swift` | `BluetoothManager.swift` | mostly renames, 3 substantive deviations |
+| `Session/TransmitterSession.swift` | `Transmitter.swift` (active path) | heavily restructured — see below |
+| `Session/PassiveTransmitterSession.swift` | `Transmitter.swift` (passive path) | clean-room reimplementation — see below |
 
 `PeripheralManager.swift` is where the connection intricacies actually live —
 `runCommand`, the condition list, `commandLock`, the delegate callbacks. It
@@ -50,7 +51,7 @@ refreshes displayed text and touches nothing BLE-related.
 For reference, CGMBLEKit itself does use a `DispatchSourceTimer`, in
 `TransmitterManager`'s simulated sample generator. That file is not vendored.
 
-## The two deviations in `TransmitterConnection`
+## The deviations in `TransmitterConnection`
 
 Everything else in that file is a rename (`BluetoothManager` →
 `TransmitterConnection` and its delegate methods) or added logging.
@@ -74,6 +75,14 @@ match can fall back to `CBAdvertisementDataLocalNameKey` when
 `didUpdatePeripheralIdentifier` delegate call lets the identifier be
 persisted and passed back into `init`, so a known transmitter can be
 reconnected directly across launches.
+
+**3. Unsolicited control and authentication values reach the delegate.**
+CGMBLEKit routes them to `Transmitter`'s passive listener. Here they were
+initially dropped (only backfill was forwarded); passive mode re-adds two
+delegate callbacks, `didReceiveControlResponse` and
+`didReceiveAuthenticationResponse`. Values claimed by the condition
+machinery — an active session's own request/response traffic — still never
+reach these callbacks.
 
 Also: the configuration constant changed from `.dexcomG5` to `.dexcomG6`, and
 the authentication-response delegate callback was dropped because auth
@@ -131,22 +140,45 @@ left on the characteristic could otherwise satisfy a bare type match.
 ## The session layer
 
 `TransmitterSession` is where the real divergence is, and it is policy rather
-than connection handling.
+than connection handling. It covers the **active** path only; the passive
+path is a separate class (below).
 
-- **Removed:** the passive path entirely. G6SensorKit always owns the
-  transmitter; it never observes another app's session. Also gone:
+- **Removed:** the passive path from this class (it lives in
+  `PassiveTransmitterSession` now). Also gone:
   `resumeScanning`, `stopScanning`, `transmitterDidConnect`; `computeHash`
   moved to `TransmitterID`.
 - **Added:** `start`/`stop`/`retarget`, `requestBackfill`/`drainBackfill`,
   `readBatteryStatus`.
 - **Kept:** `authenticate`, `requestBond`, `enableNotify`,
-  `listenToCharacteristic`, `sendCommand`, `dequeuePendingCommand`,
+  `listenToCharacteristic` (moved to `PeripheralManager+G5.swift`, shared
+  with the passive session), `sendCommand`, `dequeuePendingCommand`,
   `readGlucose`, `readTimeMessage`, `readCalibrationData`,
   `readTransmitterVersion`, `disconnect`.
 
-Backfill is a request in our version. In CGMBLEKit backfill arrives as
+Backfill is a request in the active session. In CGMBLEKit backfill arrives as
 notifications and there is no request function, because the Dexcom app drives
 the session.
+
+## The passive session
+
+`PassiveTransmitterSession` + `PassiveMessageHandler` reimplement CGMBLEKit's
+passive path without its accumulated workarounds:
+
+- **Subscribing is done once, at connect, for all three characteristics**
+  (authentication, control, backfill), and subscriptions are never toggled
+  for the life of the connection. CGMBLEKit subscribes to control only after
+  observing an authenticated session (commit `dec4ff0`), because toggling
+  subscriptions mid-exchange confused CoreBluetooth — a workaround this
+  design sidesteps rather than replicates. If field testing shows missed
+  traffic, the fallback is to gate the control subscription on the observed
+  `AuthChallengeRxMessage`, which the handler already parses.
+- **No writes exist in scope at all** — no auth, bond, commands, active reads
+  or disconnect request. CGMBLEKit's passive path shares a class with the
+  active path, so writes were reachable from it.
+- Message handling is a pure type (`PassiveMessageHandler`, no CoreBluetooth)
+  that turns observed frames into events, so the whole decode path —
+  time-frame caching, glucose dating, backfill frame reassembly and CRC
+  validation against the observed acknowledgement — is unit-tested.
 
 ## What came from xDrip4iOS
 
