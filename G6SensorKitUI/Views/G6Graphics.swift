@@ -328,11 +328,12 @@ struct G6AssetImage<Fallback: View>: View {
 struct G6FindCodeCard<Fallback: View>: View {
     let assetName: String
     let caption: String
+    var imageHeight: CGFloat = 170
     @ViewBuilder var fallback: () -> Fallback
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            G6AssetImage(name: assetName, height: 170, fallback: fallback)
+            G6AssetImage(name: assetName, height: imageHeight, fallback: fallback)
                 .frame(maxWidth: .infinity)
                 .padding(10)
                 .background(

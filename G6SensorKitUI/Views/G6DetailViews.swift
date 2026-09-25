@@ -328,6 +328,10 @@ struct G6TransmitterDetailsView: View {
 
     @State private var showingPairConfirmation = false
 
+    /// Mirrors the persisted mode; writes go through the manager, which
+    /// rebuilds the session as the other kind.
+    @State private var passiveModeEnabled = false
+
     var body: some View {
         List {
             // Top of the transmitter screen, matching where the
@@ -349,6 +353,24 @@ struct G6TransmitterDetailsView: View {
                     Text(cgmManager.state.sensorStartDate != nil
                          ? LocalizedString("Your current sensor session will end. A session lives on the transmitter, so it cannot move to a new one — you will start a fresh session after pairing, and can reuse the sensor you are wearing. Stop the sensor first if your old transmitter is still attached and you want it stopped cleanly. Your other settings are kept.", comment: "Confirmation message for pairing a new transmitter while a session is running")
                          : LocalizedString("You will enter the new transmitter's ID and can then start a sensor session on it. Your other settings are kept.", comment: "Confirmation message for pairing a new transmitter with no session running"))
+                }
+            }
+
+            Section {
+                Toggle(LocalizedString("Passive Mode", comment: "Toggle label for passive (listen-only) mode"), isOn: $passiveModeEnabled)
+                    .onChange(of: passiveModeEnabled) { newValue in
+                        guard newValue != cgmManager.state.passiveModeEnabled else {
+                            return
+                        }
+                        cgmManager.setPassiveModeEnabled(newValue)
+                    }
+            } header: {
+                Text(LocalizedString("Connection", comment: "Transmitter details section header for connection mode"))
+            } footer: {
+                if passiveModeEnabled {
+                    Text(LocalizedString("Passive mode listens to the Dexcom G6 or ONE app on this phone, which must be installed and running a sensor session with this transmitter. Start, stop and calibrate from the Dexcom app.", comment: "Footer explaining passive mode"))
+                } else {
+                    Text(LocalizedString("Direct mode talks to the transmitter itself, which allows starting, stopping and calibrating sessions here. The Dexcom app must not be connected to this transmitter while direct mode is on.", comment: "Footer explaining direct mode"))
                 }
             }
 
@@ -395,6 +417,7 @@ struct G6TransmitterDetailsView: View {
 
         }
         .listStyle(.insetGrouped)
+        .onAppear { passiveModeEnabled = cgmManager.state.passiveModeEnabled }
     }
 
     private func row(_ label: String, _ value: String) -> some View {

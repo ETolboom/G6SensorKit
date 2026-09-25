@@ -946,6 +946,70 @@
     "Save": {
       "extractionState": "manual",
       "comment": "Save session length button"
+    },
+    "Listening to the Dexcom app": {
+      "extractionState": "manual",
+      "comment": "Pairing callout title in passive mode"
+    },
+    "Passive mode never pairs with the transmitter itself. The Dexcom G6 or ONE app must be installed and connected to this transmitter — this app listens to its session.": {
+      "extractionState": "manual",
+      "comment": "Pairing callout body in passive mode"
+    },
+    "Check that the Dexcom app is installed and connected to this transmitter, that the transmitter ID is exactly right, and that your phone is next to it. Bluetooth must be on.": {
+      "extractionState": "manual",
+      "comment": "Pairing troubleshooting body in passive mode"
+    },
+    "Passive Mode": {
+      "extractionState": "manual",
+      "comment": "Toggle label for passive (listen-only) mode"
+    },
+    "Connection": {
+      "extractionState": "manual",
+      "comment": "Transmitter details section header for connection mode"
+    },
+    "Passive mode listens to the Dexcom G6 or ONE app on this phone, which must be installed and running a sensor session with this transmitter. Start, stop and calibrate from the Dexcom app.": {
+      "extractionState": "manual",
+      "comment": "Footer explaining passive mode"
+    },
+    "Direct mode talks to the transmitter itself, which allows starting, stopping and calibrating sessions here. The Dexcom app must not be connected to this transmitter while direct mode is on.": {
+      "extractionState": "manual",
+      "comment": "Footer explaining direct mode"
+    },
+    "Sessions and calibrations are managed in the Dexcom app while passive mode is on.": {
+      "extractionState": "manual",
+      "comment": "Explanation replacing the session action buttons in passive mode"
+    },
+    "Connection Mode": {
+      "extractionState": "manual",
+      "comment": "Navigation title for connection mode screen"
+    },
+    "%1$@ reads glucose from your G6 or Dexcom ONE transmitter over Bluetooth — either by talking to the transmitter itself, or by listening to the Dexcom app's session. You choose on the next screens.": {
+      "extractionState": "manual",
+      "comment": "Introduction: what the driver does (1: app name)"
+    },
+    "Choose how to connect": {
+      "extractionState": "manual",
+      "comment": "Connection mode screen heading"
+    },
+    "Direct": {
+      "extractionState": "manual",
+      "comment": "Connection mode option: direct"
+    },
+    "Recommended": {
+      "extractionState": "manual",
+      "comment": "Badge on the recommended connection mode"
+    },
+    "This app talks to the transmitter itself: start and stop sensor sessions, enter sensor codes and calibrations here. The Dexcom app must not be connected to this transmitter.": {
+      "extractionState": "manual",
+      "comment": "Direct mode explanation"
+    },
+    "Listen to the Dexcom app": {
+      "extractionState": "manual",
+      "comment": "Connection mode option: passive"
+    },
+    "This app listens to the session the Dexcom G6 or ONE app drives on this phone. The Dexcom app is required, and sessions, sensor codes and calibrations are managed there.": {
+      "extractionState": "manual",
+      "comment": "Passive mode explanation"
     }
   },
   "version": "1.1"

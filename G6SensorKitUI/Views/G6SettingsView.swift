@@ -423,7 +423,11 @@ struct G6SettingsView: View {
 
     private var actionsSection: some View {
         Section {
-            if viewModel.canStartSensor {
+            if viewModel.state.passiveModeEnabled {
+                Label(LocalizedString("Sessions and calibrations are managed in the Dexcom app while passive mode is on.", comment: "Explanation replacing the session action buttons in passive mode"), systemImage: "info.circle")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            } else if viewModel.canStartSensor {
                 Button {
                     viewModel.toPlacementGuide()
                 } label: {
@@ -465,7 +469,7 @@ struct G6SettingsView: View {
                 }
             }
         } footer: {
-            if viewModel.state.isInWarmup {
+            if viewModel.state.isInWarmup, !viewModel.state.passiveModeEnabled {
                 Text(LocalizedString("Calibration becomes available once warm-up finishes. Do not make insulin decisions from early readings — use a fingerstick meter and follow your care team's guidance.", comment: "Footer explaining warm-up restrictions"))
             }
         }
@@ -496,7 +500,7 @@ struct G6SettingsView: View {
                 .buttonStyle(G6RowButtonStyle())
             }
 
-            if viewModel.state.isAnubis {
+            if viewModel.state.isAnubis, !viewModel.state.passiveModeEnabled {
                 navRow(LocalizedString("Session Length", comment: "Row to session length settings"), "calendar", viewModel.toSensorLifeSettings)
             }
 

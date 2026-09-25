@@ -161,9 +161,10 @@ struct G6CodeBoxField: View {
 // MARK: - 1. Introduction
 
 /// Product hero, in the shape G7SensorKit uses: name, device, a short
-/// statement of what this driver does, then Continue. The wording is the
-/// inverse of G7's — that one piggybacks the manufacturer's app, this one
-/// replaces it, and getting that distinction wrong would be dangerous.
+/// statement of what this driver does, then Continue. The mode distinction
+/// (direct vs. listening to the Dexcom app) is introduced here and chosen on
+/// the connection-mode screen — getting that distinction wrong in the copy
+/// would be dangerous.
 struct G6IntroductionView: View {
     let didContinue: () -> Void
 
@@ -181,12 +182,9 @@ struct G6IntroductionView: View {
 
                 VStack(spacing: 14) {
                     Text(String(
-                        format: LocalizedString("%1$@ talks to your G6 or Dexcom ONE transmitter directly. It starts and stops sensor sessions, sends your calibrations, and fills in readings it missed.", comment: "Introduction: what the native driver does (1: app name)"),
+                        format: LocalizedString("%1$@ reads glucose from your G6 or Dexcom ONE transmitter over Bluetooth — either by talking to the transmitter itself, or by listening to the Dexcom app's session. You choose on the next screens.", comment: "Introduction: what the driver does (1: app name)"),
                         appName
                     ))
-
-                    Text(LocalizedString("You do not need the Dexcom app — and you must not let it use the same transmitter at the same time.", comment: "Introduction: single-app requirement"))
-                        .foregroundStyle(.secondary)
                 }
                 .font(.body)
                 .multilineTextAlignment(.leading)
@@ -245,6 +243,94 @@ struct G6CalloutBox: View {
         .padding()
         .background(tint.opacity(0.10))
         .cornerRadius(10)
+    }
+}
+
+// MARK: - 3. Connection mode
+
+/// Lets the user choose between owning the transmitter (direct) and
+/// listening to the Dexcom app's session (passive). Direct is presented as
+/// the recommendation; passive exists for people who want to keep the
+/// manufacturer's app running.
+struct G6ConnectionModeView: View {
+    @State private var usePassive: Bool
+    let didContinue: (Bool) -> Void
+
+    init(initialPassive: Bool, didContinue: @escaping (Bool) -> Void) {
+        _usePassive = State(initialValue: initialPassive)
+        self.didContinue = didContinue
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    Text(LocalizedString("Choose how to connect", comment: "Connection mode screen heading"))
+                        .font(.title2.bold())
+
+                    modeCard(
+                        title: LocalizedString("Direct", comment: "Connection mode option: direct"),
+                        badge: LocalizedString("Recommended", comment: "Badge on the recommended connection mode"),
+                        description: LocalizedString("This app talks to the transmitter itself: start and stop sensor sessions, enter sensor codes and calibrations here. The Dexcom app must not be connected to this transmitter.", comment: "Direct mode explanation"),
+                        symbolName: "antenna.radiowaves.left.and.right",
+                        isSelected: !usePassive
+                    ) {
+                        usePassive = false
+                    }
+
+                    modeCard(
+                        title: LocalizedString("Listen to the Dexcom app", comment: "Connection mode option: passive"),
+                        badge: nil,
+                        description: LocalizedString("This app listens to the session the Dexcom G6 or ONE app drives on this phone. The Dexcom app is required, and sessions, sensor codes and calibrations are managed there.", comment: "Passive mode explanation"),
+                        symbolName: "ear.badge.waveform",
+                        isSelected: usePassive
+                    ) {
+                        usePassive = true
+                    }
+                }
+                .padding()
+            }
+
+            G6ContinueButton(action: { didContinue(usePassive) })
+        }
+    }
+
+    private func modeCard(title: String, badge: String?, description: String, symbolName: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Image(systemName: symbolName)
+                        .foregroundColor(isSelected ? Color.accentColor : .secondary)
+                    Text(title)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    if let badge = badge {
+                        Text(badge)
+                            .font(.caption.weight(.semibold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Color.accentColor)
+                            .cornerRadius(6)
+                    }
+                    Spacer()
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(isSelected ? Color.accentColor : Color(.separator))
+                }
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -324,6 +410,10 @@ struct G6TransmitterIDEntryView: View {
                                 Text(LocalizedString("Scan package code", comment: "Scan package barcode button"))
                             }
                             .font(.subheadline.weight(.semibold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(Color.accentColor))
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -465,7 +555,7 @@ struct G6TransmitterIDEntryView: View {
     }
 }
 
-// MARK: - 3. Sensor code
+// MARK: - 4. Sensor code
 
 struct G6SensorCodeEntryView: View {
     /// Passes nil when the user chooses to start without a code.
@@ -488,9 +578,10 @@ struct G6SensorCodeEntryView: View {
 
                     G6FindCodeCard(
                         assetName: "G6SensorCodeLocation",
-                        caption: LocalizedString("The 4-digit code is on the applicator’s adhesive label, and is unique to that sensor. Use the code from the applicator you are about to insert — a code from a different one will make readings inaccurate.", comment: "Sensor code: where to find it")
+                        caption: LocalizedString("The 4-digit code is on the applicator’s adhesive label, and is unique to that sensor. Use the code from the applicator you are about to insert — a code from a different one will make readings inaccurate.", comment: "Sensor code: where to find it"),
+                        imageHeight: 110
                     ) {
-                        G6SensorCodeLabelGlyph(size: 150)
+                        G6SensorCodeLabelGlyph(size: 110)
                     }
 
                     G6CodeBoxField(
@@ -528,6 +619,10 @@ struct G6SensorCodeEntryView: View {
                                 Text(LocalizedString("Scan applicator code", comment: "Scan applicator barcode button"))
                             }
                             .font(.subheadline.weight(.semibold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(Color.accentColor))
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -536,7 +631,7 @@ struct G6SensorCodeEntryView: View {
                         symbolName: "drop.fill",
                         tint: .blue,
                         title: LocalizedString("No code on your sensor?", comment: "Sensor code callout title"),
-                        body: LocalizedString("You can start without one. The transmitter will then ask you for two fingerstick glucose values after warm-up, and for one more each day. \"Calibration\" means telling the sensor what your meter reads, so it can correct itself.", comment: "Sensor code callout body explaining calibration")
+                        body: LocalizedString("You can start without one. The transmitter will then ask you for two fingerstick glucose values after warm-up, and for one more each day.", comment: "Sensor code callout body explaining calibration")
                     )
 
                 }
@@ -690,7 +785,7 @@ struct G6SensorCodeEntryView: View {
     }
 }
 
-// MARK: - 5. Pairing
+// MARK: - 6. Pairing
 
 /// Observes the manager so the screen reflects the radio live. Without this
 /// the view read `manager.state` once and never updated, so a successful
@@ -701,6 +796,7 @@ final class G6PairingViewModel: ObservableObject, G6CGMManagerObserver {
     @Published private(set) var phase: G6ConnectionPhase = .searching
     @Published private(set) var isPaired = false
     @Published private(set) var hasSession = false
+    @Published private(set) var isPassive = false
     @Published private(set) var searchingLongerThanExpected = false
 
     private let startedAt = Date()
@@ -738,11 +834,12 @@ final class G6PairingViewModel: ObservableObject, G6CGMManagerObserver {
         let phase = cgmManager.connectionPhase
         let paired = cgmManager.isPaired
         let session = cgmManager.state.sensorStartDate != nil
+        let passive = cgmManager.state.passiveModeEnabled
         if Thread.isMainThread {
-            self.phase = phase; isPaired = paired; hasSession = session
+            self.phase = phase; isPaired = paired; hasSession = session; isPassive = passive
         } else {
             DispatchQueue.main.async {
-                self.phase = phase; self.isPaired = paired; self.hasSession = session
+                self.phase = phase; self.isPaired = paired; self.hasSession = session; self.isPassive = passive
             }
         }
     }
@@ -800,7 +897,14 @@ struct G6PairingView: View {
                         Text(LocalizedString("Your transmitter only talks to your phone about once every 5 minutes, so this can take a few minutes. Keep your phone nearby.", comment: "Pairing: explanation of the 5-minute cycle"))
                     }
 
-                    if viewModel.phase == .awaitingPairing {
+                    if viewModel.isPassive, !viewModel.isPaired {
+                        G6CalloutBox(
+                            symbolName: "ear.badge.waveform",
+                            tint: .blue,
+                            title: LocalizedString("Listening to the Dexcom app", comment: "Pairing callout title in passive mode"),
+                            body: LocalizedString("Passive mode never pairs with the transmitter itself. The Dexcom G6 or ONE app must be installed and connected to this transmitter — this app listens to its session.", comment: "Pairing callout body in passive mode")
+                        )
+                    } else if viewModel.phase == .awaitingPairing {
                         G6CalloutBox(
                             symbolName: "lock.shield.fill",
                             tint: .orange,
@@ -829,7 +933,9 @@ struct G6PairingView: View {
                             symbolName: "exclamationmark.triangle.fill",
                             tint: .orange,
                             title: LocalizedString("Still looking", comment: "Pairing troubleshooting title"),
-                            body: LocalizedString("Check that the Dexcom app is not connected to this transmitter, that the transmitter ID is exactly right, and that your phone is next to it. Bluetooth must be on.", comment: "Pairing troubleshooting body")
+                            body: viewModel.isPassive
+                                ? LocalizedString("Check that the Dexcom app is installed and connected to this transmitter, that the transmitter ID is exactly right, and that your phone is next to it. Bluetooth must be on.", comment: "Pairing troubleshooting body in passive mode")
+                                : LocalizedString("Check that the Dexcom app is not connected to this transmitter, that the transmitter ID is exactly right, and that your phone is next to it. Bluetooth must be on.", comment: "Pairing troubleshooting body")
                         )
 
                         Button {
@@ -878,7 +984,7 @@ struct G6PairingView: View {
     }
 }
 
-// MARK: - 6. Warm-up
+// MARK: - 7. Warm-up
 
 struct G6WarmupView: View {
     let manager: G6CGMManager?

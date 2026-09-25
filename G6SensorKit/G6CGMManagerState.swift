@@ -19,6 +19,7 @@ import G6SensorCore
 /// cannot live in memory.
 public enum G6SetupStep: String {
     case transmitterID
+    case connectionMode
     case placement
     case sensorCode
     case pairing
@@ -55,6 +56,12 @@ public struct G6CGMManagerState: RawRepresentable {
     public var sensorCode: String?
 
     public var shouldSyncToRemoteService: Bool
+
+    /// Passive mode observes the Dexcom app's session instead of owning the
+    /// transmitter: no auth, no bonding, no commands, no active reads. Direct
+    /// (active) mode is the default; passive is chosen by the user or by
+    /// migration from CGMBLEKit, which ran passive-only.
+    public var passiveModeEnabled: Bool
 
     /// Transmitter-reported lifetime in days (90 stock, 180 Anubis); nil until
     /// the first version-rx frame arrives.
@@ -156,6 +163,7 @@ public struct G6CGMManagerState: RawRepresentable {
         sensorStartDate: Date? = nil,
         sensorCode: String? = nil,
         shouldSyncToRemoteService: Bool = true,
+        passiveModeEnabled: Bool = false,
         transmitterExpiryInDays: UInt16? = nil,
         sensorLifeDays: Int = TransmitterManagerState.defaultSensorLifeDays,
         latestReading: G6StoredReading? = nil,
@@ -174,6 +182,7 @@ public struct G6CGMManagerState: RawRepresentable {
         self.sensorStartDate = sensorStartDate
         self.sensorCode = sensorCode
         self.shouldSyncToRemoteService = shouldSyncToRemoteService
+        self.passiveModeEnabled = passiveModeEnabled
         self.transmitterExpiryInDays = transmitterExpiryInDays
         self.sensorLifeDays = TransmitterManagerState.clampedSensorLifeDays(sensorLifeDays)
         self.latestReading = latestReading
@@ -192,24 +201,45 @@ public struct G6CGMManagerState: RawRepresentable {
             return nil
         }
 
+        // Migration from CGMBLEKit: its TransmitterManagerState persists
+        // `sensorStartOffset` and never `sensorLifeDays` or
+        // `passiveModeEnabled`, while every G6SensorKit state carries
+        // `sensorLifeDays`. CGMBLEKit ran passive-only, so a legacy-shaped
+        // state migrates into passive mode with onboarding already complete.
+        let isLegacyCGMBLEKitState = rawValue["sensorLifeDays"] == nil && rawValue["passiveModeEnabled"] == nil
+
         // UInt16 cannot round-trip through a property list, so accept Int too.
         let expiry = (rawValue["transmitterExpiryInDays"] as? UInt16)
             ?? (rawValue["transmitterExpiryInDays"] as? Int).map { UInt16(clamping: $0) }
 
+        let transmitterStartDate = rawValue["transmitterStartDate"] as? Date
+
+        // CGMBLEKit stores the session start as an offset from transmitter
+        // activation; G6SensorKit stores the date itself.
+        var sensorStartDate = rawValue["sensorStartDate"] as? Date
+        if sensorStartDate == nil, let transmitterStartDate = transmitterStartDate {
+            let offset = (rawValue["sensorStartOffset"] as? UInt32)
+                ?? (rawValue["sensorStartOffset"] as? Int).map { UInt32(clamping: $0) }
+            if let offset = offset {
+                sensorStartDate = transmitterStartDate.addingTimeInterval(TimeInterval(offset))
+            }
+        }
+
         self.init(
             transmitterID: transmitterID,
             peripheralIdentifier: (rawValue["peripheralIdentifier"] as? String).flatMap(UUID.init(uuidString:)),
-            transmitterStartDate: rawValue["transmitterStartDate"] as? Date,
-            sensorStartDate: rawValue["sensorStartDate"] as? Date,
+            transmitterStartDate: transmitterStartDate,
+            sensorStartDate: sensorStartDate,
             sensorCode: rawValue["sensorCode"] as? String,
             shouldSyncToRemoteService: rawValue["shouldSyncToRemoteService"] as? Bool ?? true,
+            passiveModeEnabled: rawValue["passiveModeEnabled"] as? Bool ?? isLegacyCGMBLEKitState,
             transmitterExpiryInDays: expiry,
             sensorLifeDays: rawValue["sensorLifeDays"] as? Int ?? TransmitterManagerState.defaultSensorLifeDays,
             latestReading: (rawValue["latestReading"] as? G6StoredReading.RawValue).flatMap(G6StoredReading.init(rawValue:)),
             recentReadings: (rawValue["recentReadings"] as? [G6StoredReading.RawValue])?.compactMap(G6StoredReading.init(rawValue:)) ?? [],
             firmwareVersion: rawValue["firmwareVersion"] as? String,
             shareUploadEnabled: rawValue["shareUploadEnabled"] as? Bool ?? false,
-            isOnboarded: rawValue["isOnboarded"] as? Bool ?? false,
+            isOnboarded: rawValue["isOnboarded"] as? Bool ?? isLegacyCGMBLEKitState,
             setupStep: (rawValue["setupStep"] as? String).flatMap(G6SetupStep.init(rawValue:)),
             pendingCommands: rawValue["pendingCommands"] as? [Command.RawValue] ?? [],
             lastSessionStartFailure: rawValue["lastSessionStartFailure"] as? String,
@@ -229,6 +259,9 @@ public struct G6CGMManagerState: RawRepresentable {
             "transmitterID": transmitterID,
             "shouldSyncToRemoteService": shouldSyncToRemoteService,
             "sensorLifeDays": sensorLifeDays,
+            // Written unconditionally: its absence is the migration signal
+            // for CGMBLEKit-shaped states (see init?(rawValue:)).
+            "passiveModeEnabled": passiveModeEnabled,
         ]
 
         raw["peripheralIdentifier"] = peripheralIdentifier?.uuidString
@@ -439,6 +472,7 @@ extension G6CGMManagerState: Equatable {
             && lhs.sensorStartDate == rhs.sensorStartDate
             && lhs.sensorCode == rhs.sensorCode
             && lhs.shouldSyncToRemoteService == rhs.shouldSyncToRemoteService
+            && lhs.passiveModeEnabled == rhs.passiveModeEnabled
             && lhs.transmitterExpiryInDays == rhs.transmitterExpiryInDays
             && lhs.sensorLifeDays == rhs.sensorLifeDays
             && lhs.latestReading == rhs.latestReading
