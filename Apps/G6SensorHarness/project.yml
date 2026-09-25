@@ -8,7 +8,7 @@ name: G6SensorHarness
 options:
   bundleIdPrefix: org.nightscout
   deploymentTarget:
-    iOS: "15.0"
+    iOS: "17.0"
 settings:
   TARGETED_DEVICE_FAMILY: "1"
   SWIFT_VERSION: "5.9"
