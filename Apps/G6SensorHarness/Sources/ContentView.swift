@@ -21,6 +21,9 @@ struct ContentView: View {
                         .textInputAutocapitalization(.characters)
                         .disabled(model.isRunning)
 
+                    Toggle("Passive mode (listen to Dexcom app)", isOn: $model.passiveModeEnabled)
+                        .disabled(model.isRunning)
+
                     if model.isRunning {
                         Button("Stop", role: .destructive) { model.stop() }
                     } else {
@@ -31,26 +34,28 @@ struct ContentView: View {
                     row("Last connect", model.lastConnect.map { $0.formatted(date: .omitted, time: .standard) } ?? "—")
                 }
 
-                Section("Session commands (sent on next connection)") {
-                    HStack {
-                        TextField("Sensor code (blank = no code)", text: $sensorCode)
-                            .keyboardType(.numberPad)
-                        Button("Start sensor") {
-                            model.enqueueStartSensor(code: sensorCode.isEmpty ? nil : sensorCode)
-                        }
-                    }
-                    Button("Stop sensor") { model.enqueueStopSensor() }
-                    HStack {
-                        TextField("Calibration mg/dL", text: $calibrationValue)
-                            .keyboardType(.numberPad)
-                        Button("Calibrate") {
-                            if let value = Double(calibrationValue) {
-                                model.enqueueCalibration(mgDL: value)
+                if !model.passiveModeEnabled {
+                    Section("Session commands (sent on next connection)") {
+                        HStack {
+                            TextField("Sensor code (blank = no code)", text: $sensorCode)
+                                .keyboardType(.numberPad)
+                            Button("Start sensor") {
+                                model.enqueueStartSensor(code: sensorCode.isEmpty ? nil : sensorCode)
                             }
                         }
+                        Button("Stop sensor") { model.enqueueStopSensor() }
+                        HStack {
+                            TextField("Calibration mg/dL", text: $calibrationValue)
+                                .keyboardType(.numberPad)
+                            Button("Calibrate") {
+                                if let value = Double(calibrationValue) {
+                                    model.enqueueCalibration(mgDL: value)
+                                }
+                            }
+                        }
+                        Button("Read battery") { model.requestBattery() }
+                        Button("Backfill last 3h") { model.requestBackfill(hours: 3) }
                     }
-                    Button("Read battery") { model.requestBattery() }
-                    Button("Backfill last 3h") { model.requestBackfill(hours: 3) }
                 }
 
                 Section("Log") {

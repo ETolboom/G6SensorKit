@@ -4,10 +4,11 @@
 //
 //  Copyright © 2026 Nightscout Foundation. MIT License.
 //
-//  Drives a TransmitterSession directly for on-device validation of the
+//  Drives a transmitter session directly for on-device validation of the
 //  core: pairing, per-cycle reads, session start/stop with sensor codes,
-//  calibration, battery, and backfill — with an in-app event log so
-//  background behavior can be inspected without a debugger.
+//  calibration, battery, and backfill in direct mode — or passive listening
+//  alongside the Dexcom app — with an in-app event log so background
+//  behavior can be inspected without a debugger.
 //
 
 import Foundation
@@ -23,13 +24,14 @@ struct LogLine: Identifiable {
 final class HarnessViewModel: ObservableObject, TransmitterSessionDelegate, TransmitterCommandSource {
 
     @Published var transmitterID: String = UserDefaults.standard.string(forKey: "harness.transmitterID") ?? ""
+    @Published var passiveModeEnabled: Bool = UserDefaults.standard.bool(forKey: "harness.passiveModeEnabled")
     @Published var isRunning = false
     @Published var latestReading: String = "—"
     @Published var lastConnect: Date?
     @Published var log: [LogLine] = []
     @Published var pendingCommands: [Command] = []
 
-    private var session: TransmitterSession?
+    private var session: (any TransmitterSessioning)?
 
     private var peripheralIdentifier: UUID? {
         get { UserDefaults.standard.string(forKey: "harness.peripheralIdentifier").flatMap(UUID.init) }
@@ -49,14 +51,23 @@ final class HarnessViewModel: ObservableObject, TransmitterSessionDelegate, Tran
         }
 
         UserDefaults.standard.set(transmitterID, forKey: "harness.transmitterID")
+        UserDefaults.standard.set(passiveModeEnabled, forKey: "harness.passiveModeEnabled")
 
-        let session = TransmitterSession(id: transmitterID, peripheralIdentifier: peripheralIdentifier)
+        let session: any TransmitterSessioning
+        if passiveModeEnabled {
+            session = PassiveTransmitterSession(id: transmitterID, peripheralIdentifier: peripheralIdentifier)
+        } else {
+            let active = TransmitterSession(id: transmitterID, peripheralIdentifier: peripheralIdentifier)
+            active.commandSource = self
+            session = active
+        }
         session.delegate = self
-        session.commandSource = self
         self.session = session
         session.start()
         isRunning = true
-        append("Session armed for \(transmitterID); waiting for transmitter advertisement (~5 min cycle)")
+        append(passiveModeEnabled
+            ? "Passive session armed for \(transmitterID); listening for the Dexcom app's traffic"
+            : "Session armed for \(transmitterID); waiting for transmitter advertisement (~5 min cycle)")
     }
 
     func stop() {
@@ -87,17 +98,29 @@ final class HarnessViewModel: ObservableObject, TransmitterSessionDelegate, Tran
     }
 
     func requestBattery() {
-        session?.shouldReadBattery = true
+        guard let session = session as? TransmitterSession else {
+            append("Battery reads require direct mode")
+            return
+        }
+        session.shouldReadBattery = true
         append("Battery read queued for next connection")
     }
 
     func requestBackfill(hours: Double) {
+        guard let session = session as? TransmitterSession else {
+            append("Backfill requests require direct mode")
+            return
+        }
         let end = Date()
-        session?.requestedBackfillWindow = DateInterval(start: end.addingTimeInterval(-hours * 3600), end: end)
+        session.requestedBackfillWindow = DateInterval(start: end.addingTimeInterval(-hours * 3600), end: end)
         append("Backfill queued for last \(Int(hours))h")
     }
 
     private func enqueue(_ command: Command) {
+        guard !passiveModeEnabled else {
+            append("Commands require direct mode")
+            return
+        }
         DispatchQueue.main.async {
             self.pendingCommands.append(command)
             self.append("Queued: \(String(describing: command))")
@@ -115,49 +138,53 @@ final class HarnessViewModel: ObservableObject, TransmitterSessionDelegate, Tran
 
     // MARK: - TransmitterSessionDelegate (background queue)
 
-    func transmitterSessionDidConnect(_ session: TransmitterSession) {
+    func transmitterSessionDidConnect(_ session: any TransmitterSessioning) {
         DispatchQueue.main.async { self.lastConnect = Date() }
         append("Connected")
     }
 
-    func transmitterSession(_ session: TransmitterSession, didError error: Error) {
+    func transmitterSession(_ session: any TransmitterSessioning, didError error: Error) {
         append("Error: \(error)")
     }
 
-    func transmitterSession(_ session: TransmitterSession, didRead glucose: Glucose) {
+    func transmitterSession(_ session: any TransmitterSessioning, didRead glucose: Glucose) {
         let value = glucose.glucoseMgDL.map { "\(Int($0)) mg/dL" } ?? "unreliable (\(glucose.state))"
         DispatchQueue.main.async { self.latestReading = value }
         append("Glucose: \(value), state: \(glucose.state), trend: \(glucose.trend)")
     }
 
-    func transmitterSession(_ session: TransmitterSession, didReadBackfill glucose: [Glucose]) {
+    func transmitterSession(_ session: any TransmitterSessioning, didReadBackfill glucose: [Glucose]) {
         append("Backfill: \(glucose.count) readings")
     }
 
-    func transmitterSession(_ session: TransmitterSession, didReadTransmitterVersion message: TransmitterVersionRxMessage) {
+    func transmitterSession(_ session: any TransmitterSessioning, didReadTransmitterVersion message: TransmitterVersionRxMessage) {
         append("Version: fw \(message.firmwareVersion.map(String.init).joined(separator: ".")), expiry \(message.transmitterExpiryInDays)d\(message.isAnubis ? " (Anubis)" : "")")
     }
 
-    func transmitterSession(_ session: TransmitterSession, didReadBattery message: BatteryStatusRxMessage) {
+    func transmitterSession(_ session: any TransmitterSessioning, didReadBattery message: BatteryStatusRxMessage) {
         append("Battery: A \(Double(message.voltageA)/100)V, B \(Double(message.voltageB)/100)V")
     }
 
-    func transmitterSession(_ session: TransmitterSession, didReadUnknownData data: Data) {
+    func transmitterSession(_ session: any TransmitterSessioning, didReadTransmitterTime activationDate: Date) {
+        append("Transmitter clock: activation \(activationDate.formatted(date: .abbreviated, time: .standard))")
+    }
+
+    func transmitterSession(_ session: any TransmitterSessioning, didReadUnknownData data: Data) {
         append("Unknown data: \(data.map { String(format: "%02x", $0) }.joined())")
     }
 
-    func transmitterSession(_ session: TransmitterSession, didUpdatePeripheralIdentifier identifier: UUID?) {
+    func transmitterSession(_ session: any TransmitterSessioning, didUpdatePeripheralIdentifier identifier: UUID?) {
         DispatchQueue.main.async { self.peripheralIdentifier = identifier }
         append("Peripheral identifier: \(identifier?.uuidString ?? "nil")")
     }
 
-    func transmitterSessionDidRequestBond(_ session: TransmitterSession) {
+    func transmitterSessionDidRequestBond(_ session: any TransmitterSessioning) {
         append("⚠️ Accept the iOS pairing prompt within 60 seconds")
     }
 
     // MARK: - TransmitterCommandSource (background queue)
 
-    func dequeuePendingCommand(for session: TransmitterSession) -> Command? {
+    func dequeuePendingCommand(for session: any TransmitterSessioning) -> Command? {
         var command: Command?
         DispatchQueue.main.sync {
             if !pendingCommands.isEmpty {
@@ -167,11 +194,11 @@ final class HarnessViewModel: ObservableObject, TransmitterSessionDelegate, Tran
         return command
     }
 
-    func transmitterSession(_ session: TransmitterSession, didFail command: Command, with error: Error) {
+    func transmitterSession(_ session: any TransmitterSessioning, didFail command: Command, with error: Error) {
         append("Command failed: \(String(describing: command)) — \(error)")
     }
 
-    func transmitterSession(_ session: TransmitterSession, didComplete command: Command, response: TransmitterRxMessage?) {
+    func transmitterSession(_ session: any TransmitterSessioning, didComplete command: Command, response: TransmitterRxMessage?) {
         append("Command completed: \(String(describing: command))")
     }
 }
