@@ -466,10 +466,10 @@ public final class TransmitterSession: TransmitterConnectionDelegate {
 
         let ack = try peripheral.requestBackfill(startTime: startTime, endTime: endTime)
 
-        log.default("Backfill acknowledged: status %{public}@, backfillStatus %{public}@, id %{public}@, range %{public}@-%{public}@, length %{public}@, crc %{public}@",
-                    String(ack.status), String(ack.backfillStatus), String(ack.identifier),
-                    String(ack.startTime), String(ack.endTime),
-                    String(ack.bufferLength), String(format: "%04x", ack.bufferCRC))
+        log.default("Backfill acknowledged: %{public}@",
+                    "status \(ack.status), backfillStatus \(ack.backfillStatus), id \(ack.identifier), " +
+                    "range \(ack.startTime)-\(ack.endTime), length \(ack.bufferLength), " +
+                    "crc \(String(format: "%04x", ack.bufferCRC))")
 
         // Nothing stored for the window: an empty result, not a failure.
         guard ack.bufferLength > 0 else {

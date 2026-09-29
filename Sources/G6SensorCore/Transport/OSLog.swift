@@ -34,7 +34,8 @@ extension OSLog {
     }
 
     private func log(_ message: StaticString, type: OSLogType, _ args: [CVarArg]) {
-        mirrorToFile(message, type: type, args)
+        let rendered = render(message, args)
+        mirrorToFile(rendered, type: type)
 
         switch args.count {
         case 0:
@@ -50,7 +51,10 @@ extension OSLog {
         case 5:
             os_log(message, log: self, type: type, args[0], args[1], args[2], args[3], args[4])
         default:
-            os_log(message, log: self, type: type, args)
+            // os_log can't take the array as varargs: handing it over reads
+            // garbage pointers for each %@ and crashes. Log the rendered line.
+            assertionFailure("OSLog supports at most 5 arguments, got \(args.count): \(message)")
+            os_log("%{public}@", log: self, type: type, rendered)
         }
     }
 
@@ -65,15 +69,17 @@ extension OSLog {
         return Self.categories[ObjectIdentifier(self)] ?? "G6SensorKit"
     }
 
-    /// Mirrors every OSLog line into the exportable file log. Format
-    /// specifiers are OSLog-flavoured (%{public}@), so the privacy qualifier
-    /// is stripped before String(format:) sees them.
-    private func mirrorToFile(_ message: StaticString, type: OSLogType, _ args: [CVarArg]) {
+    /// Format specifiers are OSLog-flavoured (%{public}@), so the privacy
+    /// qualifier is stripped before String(format:) sees them.
+    private func render(_ message: StaticString, _ args: [CVarArg]) -> String {
         let template = "\(message)"
             .replacingOccurrences(of: "%{public}", with: "%")
             .replacingOccurrences(of: "%{private}", with: "%")
-        let rendered = args.isEmpty ? template : String(format: template, arguments: args)
+        return args.isEmpty ? template : String(format: template, arguments: args)
+    }
 
+    /// Mirrors every OSLog line into the exportable file log.
+    private func mirrorToFile(_ rendered: String, type: OSLogType) {
         let level: String
         switch type {
         case .debug: level = "DEBUG"
