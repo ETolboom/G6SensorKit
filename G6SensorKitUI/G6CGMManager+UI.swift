@@ -117,6 +117,18 @@ extension G6CGMManager: CGMManagerUI {
             )
         }
 
+        // Ahead of calibration and signal loss: a dying battery is the likely
+        // cause of both, and replacing the transmitter is the actual fix. The
+        // highlight is the host's home-screen tag, so this is the one place
+        // the user sees it without opening settings.
+        if state.isBatteryVeryLow {
+            return G6StatusHighlight(
+                localizedMessage: LocalizedString("Transmitter Low", comment: "Status highlight when the transmitter battery is very low"),
+                imageName: "battery.0percent",
+                state: .warning
+            )
+        }
+
         if let reading = state.latestReading, reading.calibrationState.needsCalibration {
             return G6StatusHighlight(
                 localizedMessage: LocalizedString("Calibration Needed", comment: "Status highlight when a calibration is requested"),
@@ -162,7 +174,11 @@ extension G6CGMManager: CGMManagerUI {
         let progressState: DeviceLifecycleProgressState
         if remaining <= 0 {
             progressState = .critical
-        } else if remaining <= .hours(24) {
+        } else if remaining <= .hours(24) || state.isBatteryVeryLow {
+            // A dying transmitter battery counts too. Trio shows the status
+            // highlight ("Transmitter Low") on its home screen only while
+            // the progress is not normal, so without this it would stay
+            // hidden for most of a session.
             progressState = .warning
         } else {
             progressState = .normalCGM

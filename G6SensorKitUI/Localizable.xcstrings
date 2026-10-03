@@ -1,6 +1,10 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Readings may be missing or arrive late, and the transmitter may respond slowly or not at all — including to stopping a session or calibrating. Replace the transmitter as soon as you can, and check your glucose with a fingerstick meter if readings stop.": {
+      "comment": "Settings banner body when the transmitter battery is very low",
+      "extractionState": "manual"
+    },
     "Sensor Failed": {
       "extractionState": "manual",
       "comment": "Status highlight for failed sensor"
@@ -48,6 +52,14 @@
     "Pairing": {
       "extractionState": "manual",
       "comment": "Navigation title for pairing screen"
+    },
+    "Transmitter Low": {
+      "comment": "Status highlight when the transmitter battery is very low",
+      "extractionState": "manual"
+    },
+    "Transmitter battery very low": {
+      "comment": "Settings banner title when the transmitter battery is very low",
+      "extractionState": "manual"
     },
     "Warm-Up": {
       "extractionState": "manual",
