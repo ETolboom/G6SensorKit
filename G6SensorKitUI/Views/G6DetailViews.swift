@@ -314,7 +314,10 @@ struct G6CalibrationView: View {
             return
         }
 
-        cgmManager.enqueue(.calibrateSensor(toMgDL: valueMgDL, at: Date()))
+        // Flagged so a calibration that never lands is reported rather than
+        // silently lost. It is never retried: it only means anything next to
+        // the fingerstick it came from.
+        cgmManager.enqueue(.calibrateSensor(toMgDL: valueMgDL, at: Date()), notifyIfUndelivered: true)
         didSubmit()
     }
 }

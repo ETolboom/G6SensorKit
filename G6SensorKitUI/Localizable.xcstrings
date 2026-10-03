@@ -483,6 +483,10 @@
       "comment": "Reading detail section header",
       "extractionState": "manual"
     },
+    "Readings may be missing or arrive late, and the transmitter may respond slowly or not at all — including to stopping a session or calibrating. Replace the transmitter as soon as you can, and check your glucose with a fingerstick meter if readings stop.": {
+      "comment": "Settings banner body when the transmitter battery is very low",
+      "extractionState": "manual"
+    },
     "Readings will appear as they arrive from the transmitter, about every 5 minutes.": {
       "comment": "Explanation shown once warm-up has completed",
       "extractionState": "manual"
@@ -587,6 +591,10 @@
       "comment": "Navigation title for sensor life settings",
       "extractionState": "manual"
     },
+    "Session stop queued — it is sent the next time the transmitter connects, which can take up to 5 minutes. Readings continue until then.": {
+      "comment": "Shown while a session stop is waiting for the next connection",
+      "extractionState": "manual"
+    },
     "Session stopped": {
       "comment": "Algorithm state: stopped",
       "extractionState": "manual"
@@ -651,6 +659,10 @@
       "comment": "Confirmation title for stopping a session",
       "extractionState": "manual"
     },
+    "Stopping Sensor Session…": {
+      "comment": "Disabled row shown while a session stop waits for the transmitter",
+      "extractionState": "manual"
+    },
     "Take a blood sample from your fingertip and measure it with your meter.": {
       "comment": "Calibration step 2 body",
       "extractionState": "manual"
@@ -703,6 +715,14 @@
       "comment": "Insert step 2 note",
       "extractionState": "manual"
     },
+    "The stop could not be sent to the transmitter, so the session is still running. Stop it again with your phone close to the transmitter.": {
+      "comment": "Shown when a session stop failed to send",
+      "extractionState": "manual"
+    },
+    "The stop is still waiting for the transmitter, so the session is still running. It is sent as soon as the transmitter connects. Keep your phone close to the transmitter; if its battery is low, it may not connect.": {
+      "comment": "Shown while a session stop has waited several connection cycles",
+      "extractionState": "manual"
+    },
     "This app": {
       "comment": "Fallback when the host app name cannot be read",
       "extractionState": "manual"
@@ -741,6 +761,14 @@
     },
     "Transmitter ID": {
       "comment": "Navigation title for transmitter ID entry",
+      "extractionState": "manual"
+    },
+    "Transmitter Low": {
+      "comment": "Status highlight when the transmitter battery is very low",
+      "extractionState": "manual"
+    },
+    "Transmitter battery very low": {
+      "comment": "Settings banner title when the transmitter battery is very low",
       "extractionState": "manual"
     },
     "Trend": {
@@ -865,6 +893,10 @@
     },
     "Your current sensor session will end. A session lives on the transmitter, so it cannot move to a new one — you will start a fresh session after pairing, and can reuse the sensor you are wearing. Stop the sensor first if your old transmitter is still attached and you want it stopped cleanly. Your other settings are kept.": {
       "comment": "Confirmation message for pairing a new transmitter while a session is running",
+      "extractionState": "manual"
+    },
+    "Your last calibration could not be sent to the transmitter and was not applied. To calibrate, take a new fingerstick and enter it.": {
+      "comment": "Shown when a calibration failed to send or expired unsent",
       "extractionState": "manual"
     },
     "Your sensor is warming up": {

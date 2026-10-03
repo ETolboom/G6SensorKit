@@ -541,7 +541,7 @@ public class G6UICoordinator: UINavigationController, CGMManagerOnboarding, Comp
         }
 
         cgmManager.logSetupEvent("Queued session start with sensor code \(sensorCode.carriesParameters ? sensorCode.code : "none")")
-        cgmManager.enqueue(.startSensor(at: Date(), sensorCode: sensorCode))
+        cgmManager.enqueue(.startSensor(at: Date(), sensorCode: sensorCode), notifyIfUndelivered: true)
     }
 
     private func deleteCGM() {

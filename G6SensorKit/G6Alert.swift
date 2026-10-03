@@ -16,6 +16,7 @@
 
 import Foundation
 import LoopKit
+import G6SensorCore
 
 enum G6Alert: String, CaseIterable {
     case sensorExpiringSoon
@@ -29,6 +30,8 @@ enum G6Alert: String, CaseIterable {
     case transmitterBatteryLow
     case transmitterBatteryVeryLow
     case lastSessionForTransmitter
+    case commandDelayed
+    case commandFailed
 
     init?(rawValue: Alert.AlertIdentifier) {
         guard let match = Self.allCases.first(where: { $0.rawValue == rawValue }) else {
@@ -55,7 +58,9 @@ enum G6Alert: String, CaseIterable {
              .signalLoss,
              .calibrationNeeded,
              .transmitterExpired,
-             .transmitterBatteryVeryLow:
+             .transmitterBatteryVeryLow,
+             .commandDelayed,
+             .commandFailed:
             return .timeSensitive
         case .sensorFailed:
             return .critical
@@ -86,6 +91,10 @@ enum G6Alert: String, CaseIterable {
             return LocalizedString("Transmitter battery very low", comment: "Alert title for a very low transmitter battery")
         case .lastSessionForTransmitter:
             return LocalizedString("Last session for this transmitter", comment: "Alert title when a transmitter cannot fit another full session")
+        case .commandDelayed:
+            return LocalizedString("Transmitter not responding", comment: "Alert title when a queued command has waited several connection cycles")
+        case .commandFailed:
+            return LocalizedString("Request not sent", comment: "Alert title when a command failed to send or expired unsent")
         }
     }
 
@@ -113,13 +122,50 @@ enum G6Alert: String, CaseIterable {
             return LocalizedString("Your transmitter's battery is very low and it may stop sending readings at any time, even mid-session. Replace the transmitter as soon as you can, and check your glucose with a fingerstick meter if readings stop.", comment: "Alert body for a very low transmitter battery")
         case .lastSessionForTransmitter:
             return LocalizedString("Your transmitter does not have enough life left for another full sensor session after this one. Have a replacement transmitter ready before this sensor ends.", comment: "Alert body when a transmitter cannot fit another full session")
+        case .commandDelayed:
+            return LocalizedString("A request is still waiting for your transmitter. It is sent as soon as the transmitter connects. Keep your phone close to the transmitter; if its battery is low, it may not connect.", comment: "Alert body when a queued command has waited several connection cycles")
+        case .commandFailed:
+            return LocalizedString("A request could not be sent to your transmitter and will not be retried. Open the CGM settings and try again.", comment: "Alert body when a command failed to send")
         }
     }
 
-    func alert(managerIdentifier: String) -> Alert {
+    /// The body, naming the command when the alert is about one. What the
+    /// user needs to do differs: a stop or start leaves the session in the
+    /// wrong state, a lost calibration needs a fresh fingerstick.
+    func body(delayed: Command?, undelivered: UndeliveredCommand?) -> String {
+        switch self {
+        case .commandDelayed:
+            switch delayed {
+            case .stopSensor?:
+                return LocalizedString("Your sensor session has not stopped yet: the request is still waiting for your transmitter and is sent as soon as it connects. Keep your phone close to the transmitter; if its battery is low, it may not connect.", comment: "Alert body when a session stop has waited several connection cycles")
+            case .startSensor?:
+                return LocalizedString("Your new sensor session has not started yet: the request is still waiting for your transmitter and is sent as soon as it connects. Keep your phone close to the transmitter; if its battery is low, it may not connect.", comment: "Alert body when a session start has waited several connection cycles")
+            default:
+                return body
+            }
+        case .commandFailed:
+            guard let undelivered = undelivered else {
+                return body
+            }
+            switch undelivered.entry.command {
+            case .stopSensor:
+                return LocalizedString("Your sensor session was not stopped: the request could not be sent to your transmitter and will not be retried. Open the CGM settings and stop the session again, with your phone close to the transmitter.", comment: "Alert body when a session stop failed to send")
+            case .startSensor:
+                return LocalizedString("Your new sensor session was not started: the request could not be sent to your transmitter and will not be retried. Open the CGM settings and start the sensor again, with your phone close to the transmitter.", comment: "Alert body when a session start failed to send")
+            case .calibrateSensor:
+                return LocalizedString("Your calibration was not applied: it could not be sent to your transmitter in time and will not be retried. If you still want to calibrate, take a new fingerstick and enter it.", comment: "Alert body when a calibration failed to send or expired unsent")
+            case .resetTransmitter:
+                return body
+            }
+        default:
+            return body
+        }
+    }
+
+    func alert(managerIdentifier: String, delayed: Command? = nil, undelivered: UndeliveredCommand? = nil) -> Alert {
         let content = Alert.Content(
             title: title,
-            body: body,
+            body: body(delayed: delayed, undelivered: undelivered),
             acknowledgeActionButtonLabel: LocalizedString("OK", comment: "Alert acknowledgment button label")
         )
 

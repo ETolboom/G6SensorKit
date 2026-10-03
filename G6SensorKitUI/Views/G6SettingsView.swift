@@ -214,8 +214,35 @@ final class G6SettingsViewModel: ObservableObject, G6CGMManagerObserver {
         }
     }
 
+    /// A stop that has not reached the transmitter. The session keeps
+    /// running until it does, so the screen must not look as if the stop
+    /// either worked or was ignored — a tester pressed the button three times
+    /// because nothing changed.
+    var pendingSessionStop: QueuedCommand? {
+        state.pendingSessionStop
+    }
+
+    /// A stop or calibration that failed to send or expired unsent, while
+    /// it is still worth telling the user about. Starts are left out: a
+    /// failed start already shows its own explanation.
+    var undeliveredCommandNotice: String? {
+        guard let undelivered = state.outstandingUndeliveredCommand else {
+            return nil
+        }
+        switch undelivered.entry.command {
+        case .stopSensor:
+            return LocalizedString("The stop could not be sent to the transmitter, so the session is still running. Stop it again with your phone close to the transmitter.", comment: "Shown when a session stop failed to send")
+        case .calibrateSensor:
+            return LocalizedString("Your last calibration could not be sent to the transmitter and was not applied. To calibrate, take a new fingerstick and enter it.", comment: "Shown when a calibration failed to send or expired unsent")
+        case .startSensor, .resetTransmitter:
+            return nil
+        }
+    }
+
     func stopSensor() {
-        cgmManager.enqueue(.stopSensor(at: Date()))
+        // Flagged: if the stop never lands, the user believes the session
+        // has ended while it carries on, so they must be told.
+        cgmManager.enqueue(.stopSensor(at: Date()), notifyIfUndelivered: true)
     }
 
     /// Current and previous log files. The manager's state is written out
@@ -283,6 +310,33 @@ struct G6SettingsView: View {
         }
     }
 
+    // MARK: - Battery banner
+
+    /// The Sensor section's last row. Stays up for as long as the battery reads very low; there is nothing
+    /// to dismiss, because the only fix is a new transmitter. A tester ran on
+    /// a near-dead battery for a day of dropped connections and an End Sensor
+    /// that never got through, with nothing on this screen to explain why.
+    private var batteryVeryLowBanner: some View {
+        Button(action: viewModel.toBatteryDetails) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "battery.0percent")
+                    .font(.title2)
+                    .foregroundStyle(.red)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(LocalizedString("Transmitter battery very low", comment: "Settings banner title when the transmitter battery is very low"))
+                        .font(.subheadline.weight(.semibold))
+                    Text(LocalizedString("Readings may be missing or arrive late, and the transmitter may respond slowly or not at all — including to stopping a session or calibrating. Replace the transmitter as soon as you can, and check your glucose with a fingerstick meter if readings stop.", comment: "Settings banner body when the transmitter battery is very low"))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(.vertical, 4)
+        }
+        .buttonStyle(G6RowButtonStyle())
+        .listRowBackground(Color.red.opacity(0.12))
+    }
+
     private var sensorSection: some View {
         Section {
             G6LifecycleBar(
@@ -302,6 +356,38 @@ struct G6SettingsView: View {
                 }
             }
 
+            if let stop = viewModel.pendingSessionStop {
+                if stop.isDelayed() {
+                    Label {
+                        Text(LocalizedString("The stop is still waiting for the transmitter, so the session is still running. It is sent as soon as the transmitter connects. Keep your phone close to the transmitter; if its battery is low, it may not connect.", comment: "Shown while a session stop has waited several connection cycles"))
+                            .font(.footnote)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                    }
+                } else {
+                    Label {
+                        Text(LocalizedString("Session stop queued — it is sent the next time the transmitter connects, which can take up to 5 minutes. Readings continue until then.", comment: "Shown while a session stop is waiting for the next connection"))
+                            .font(.footnote)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } icon: {
+                        ProgressView()
+                    }
+                }
+            }
+
+            if let notice = viewModel.undeliveredCommandNotice {
+                Label {
+                    Text(notice)
+                        .font(.footnote)
+                        .fixedSize(horizontal: false, vertical: true)
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                }
+            }
+
             // Only meaningful when nothing is running. A stored failure can
             // outlive the situation that produced it — it is persisted, so it
             // survives relaunches and rebuilds — and a warning about not being
@@ -316,6 +402,12 @@ struct G6SettingsView: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
                 }
+            }
+
+            // Last, so the session's own status reads first and the battery
+            // explains it underneath.
+            if viewModel.state.isBatteryVeryLow {
+                batteryVeryLowBanner
             }
         } header: {
             Text(LocalizedString("Sensor", comment: "Settings section: sensor"))
@@ -453,19 +545,25 @@ struct G6SettingsView: View {
                 .buttonStyle(G6RowButtonStyle())
                 .disabled(!viewModel.canCalibrate)
 
-                Button(role: .destructive) {
-                    showingStopConfirmation = true
-                } label: {
-                    Label(LocalizedString("Stop Sensor Session", comment: "Button to stop the sensor session"), systemImage: "stop.circle")
-                }
-                .confirmationDialog(
-                    LocalizedString("Stop this sensor session?", comment: "Confirmation title for stopping a session"),
-                    isPresented: $showingStopConfirmation,
-                    titleVisibility: .visible
-                ) {
-                    Button(LocalizedString("Stop Session", comment: "Confirm stop session"), role: .destructive, action: viewModel.stopSensor)
-                } message: {
-                    Text(LocalizedString("You will stop getting readings until you start a new sensor. A stopped session cannot be restarted.", comment: "Confirmation message for stopping a session"))
+                if viewModel.pendingSessionStop != nil {
+                    // Already queued; another tap would only replace it.
+                    Label(LocalizedString("Stopping Sensor Session…", comment: "Disabled row shown while a session stop waits for the transmitter"), systemImage: "stop.circle")
+                        .foregroundStyle(.secondary)
+                } else {
+                    Button(role: .destructive) {
+                        showingStopConfirmation = true
+                    } label: {
+                        Label(LocalizedString("Stop Sensor Session", comment: "Button to stop the sensor session"), systemImage: "stop.circle")
+                    }
+                    .confirmationDialog(
+                        LocalizedString("Stop this sensor session?", comment: "Confirmation title for stopping a session"),
+                        isPresented: $showingStopConfirmation,
+                        titleVisibility: .visible
+                    ) {
+                        Button(LocalizedString("Stop Session", comment: "Confirm stop session"), role: .destructive, action: viewModel.stopSensor)
+                    } message: {
+                        Text(LocalizedString("You will stop getting readings until you start a new sensor. A stopped session cannot be restarted.", comment: "Confirmation message for stopping a session"))
+                    }
                 }
             }
         } footer: {

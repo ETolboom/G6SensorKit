@@ -102,6 +102,10 @@ public struct G6CGMManagerState: RawRepresentable {
     /// calibration must not vanish if the app is relaunched meanwhile.
     public var pendingCommands: [Command.RawValue]
 
+    /// The last flagged command that failed to send or expired unsent. Never
+    /// re-sent; kept so the user is told and can act on it.
+    public var undeliveredCommand: UndeliveredCommand?
+
     // MARK: - Battery
 
     /// Hundredths of a volt (310 is 3.10 V).
@@ -174,6 +178,7 @@ public struct G6CGMManagerState: RawRepresentable {
         setupStep: G6SetupStep? = nil,
         pendingCommands: [Command.RawValue] = [],
         lastSessionStartFailure: String? = nil,
+        undeliveredCommand: UndeliveredCommand? = nil,
         algorithmStateRawValue: UInt8? = nil
     ) {
         self.transmitterID = transmitterID
@@ -193,6 +198,7 @@ public struct G6CGMManagerState: RawRepresentable {
         self.setupStep = setupStep
         self.pendingCommands = pendingCommands
         self.lastSessionStartFailure = lastSessionStartFailure
+        self.undeliveredCommand = undeliveredCommand
         self.algorithmStateRawValue = algorithmStateRawValue
     }
 
@@ -243,6 +249,7 @@ public struct G6CGMManagerState: RawRepresentable {
             setupStep: (rawValue["setupStep"] as? String).flatMap(G6SetupStep.init(rawValue:)),
             pendingCommands: rawValue["pendingCommands"] as? [Command.RawValue] ?? [],
             lastSessionStartFailure: rawValue["lastSessionStartFailure"] as? String,
+            undeliveredCommand: (rawValue["undeliveredCommand"] as? [String: Any]).flatMap(UndeliveredCommand.init(rawValue:)),
             algorithmStateRawValue: (rawValue["algorithmState"] as? Int).map { UInt8(clamping: $0) }
         )
 
@@ -288,6 +295,7 @@ public struct G6CGMManagerState: RawRepresentable {
             raw["pendingCommands"] = pendingCommands
         }
         raw["lastSessionStartFailure"] = lastSessionStartFailure
+        raw["undeliveredCommand"] = undeliveredCommand?.rawValue
         raw["algorithmState"] = algorithmStateRawValue.map { Int($0) }
 
         raw["batteryVoltageA"] = batteryVoltageA.map { Int($0) }
@@ -393,6 +401,38 @@ public struct G6CGMManagerState: RawRepresentable {
         }
     }
 
+    /// The undelivered command, while it still describes something wrong.
+    /// A stop matters until the session ends some other way, a start until
+    /// one is running. A calibration has no such condition to watch, so it
+    /// is shown until the user has acknowledged the alert.
+    public var outstandingUndeliveredCommand: UndeliveredCommand? {
+        guard let undelivered = undeliveredCommand else {
+            return nil
+        }
+        switch undelivered.entry.command {
+        case .stopSensor:
+            return sensorStartDate != nil ? undelivered : nil
+        case .startSensor:
+            return hasActiveSession ? nil : undelivered
+        case .calibrateSensor, .resetTransmitter:
+            return undelivered.acknowledged ? nil : undelivered
+        }
+    }
+
+    /// A session stop the user asked for that the transmitter has not
+    /// received yet. Until it does, the session keeps running — and with a
+    /// failing link that can be a long time.
+    public var pendingSessionStop: QueuedCommand? {
+        return pendingCommands.lazy
+            .compactMap(QueuedCommand.init(rawValue:))
+            .first { entry in
+                if case .stopSensor = entry.command {
+                    return true
+                }
+                return false
+            }
+    }
+
     /// The device model implied by the transmitter ID prefix. G6 transmitters
     /// use `8…`; Dexcom ONE uses `5…` or `C…`.
     public var deviceModel: String {
@@ -482,6 +522,7 @@ extension G6CGMManagerState: Equatable {
             && lhs.isOnboarded == rhs.isOnboarded
             && lhs.setupStep == rhs.setupStep
             && lhs.lastSessionStartFailure == rhs.lastSessionStartFailure
+            && lhs.undeliveredCommand == rhs.undeliveredCommand
             && lhs.algorithmStateRawValue == rhs.algorithmStateRawValue
             && lhs.batteryVoltageA == rhs.batteryVoltageA
             && lhs.batteryVoltageB == rhs.batteryVoltageB
