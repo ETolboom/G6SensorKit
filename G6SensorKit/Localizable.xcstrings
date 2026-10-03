@@ -1,6 +1,18 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "A request could not be sent to your transmitter and will not be retried. Open the CGM settings and try again.": {
+      "comment": "Alert body when a command failed to send",
+      "extractionState": "manual"
+    },
+    "A request is still waiting for your transmitter. It is sent as soon as the transmitter connects. Keep your phone close to the transmitter; if its battery is low, it may not connect.": {
+      "comment": "Alert body when a queued command has waited several connection cycles",
+      "extractionState": "manual"
+    },
+    "Request not sent": {
+      "comment": "Alert title when a command failed to send or expired unsent",
+      "extractionState": "manual"
+    },
     "Sensor expires in 24 hours": {
       "extractionState": "manual",
       "comment": "Alert title for sensor expiring in a day"
@@ -33,6 +45,22 @@
       "extractionState": "manual",
       "comment": "Alert title for an expired transmitter"
     },
+    "Transmitter not responding": {
+      "comment": "Alert title when a queued command has waited several connection cycles",
+      "extractionState": "manual"
+    },
+    "Your calibration was not applied: it could not be sent to your transmitter in time and will not be retried. If you still want to calibrate, take a new fingerstick and enter it.": {
+      "comment": "Alert body when a calibration failed to send or expired unsent",
+      "extractionState": "manual"
+    },
+    "Your new sensor session has not started yet: the request is still waiting for your transmitter and is sent as soon as it connects. Keep your phone close to the transmitter; if its battery is low, it may not connect.": {
+      "comment": "Alert body when a session start has waited several connection cycles",
+      "extractionState": "manual"
+    },
+    "Your new sensor session was not started: the request could not be sent to your transmitter and will not be retried. Open the CGM settings and start the sensor again, with your phone close to the transmitter.": {
+      "comment": "Alert body when a session start failed to send",
+      "extractionState": "manual"
+    },
     "Your sensor session ends in about 24 hours. Plan to have a new sensor ready.": {
       "extractionState": "manual",
       "comment": "Alert body for sensor expiring in a day"
@@ -44,6 +72,14 @@
     "Your sensor session has ended and no new readings will arrive. Start a new sensor when you are ready.": {
       "extractionState": "manual",
       "comment": "Alert body for expired sensor"
+    },
+    "Your sensor session has not stopped yet: the request is still waiting for your transmitter and is sent as soon as it connects. Keep your phone close to the transmitter; if its battery is low, it may not connect.": {
+      "comment": "Alert body when a session stop has waited several connection cycles",
+      "extractionState": "manual"
+    },
+    "Your sensor session was not stopped: the request could not be sent to your transmitter and will not be retried. Open the CGM settings and stop the session again, with your phone close to the transmitter.": {
+      "comment": "Alert body when a session stop failed to send",
+      "extractionState": "manual"
     },
     "Your sensor stopped working and is not sending readings. Remove it and start a new sensor. Check your glucose with a fingerstick meter in the meantime.": {
       "extractionState": "manual",

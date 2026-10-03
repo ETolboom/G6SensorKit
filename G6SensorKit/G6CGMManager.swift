@@ -73,6 +73,10 @@ public final class G6CGMManager: CGMManager {
 
     private var lastBatteryReadDate: Date?
 
+    /// The command handed to the session and not yet answered. Held so a
+    /// flagged command whose send fails can be reported to the user.
+    private let lockedInFlightCommand: Locked<QueuedCommand?> = Locked(nil)
+
     /// Response code from a session start awaiting confirmation. The reply
     /// alone does not say whether a session began, so it is held until the
     /// transmitter's state settles the question.
@@ -298,22 +302,36 @@ public final class G6CGMManager: CGMManager {
     }
 
     /// Queues a device command for the next connection cycle.
-    public func enqueue(_ command: Command) {
+    ///
+    /// - Parameter notifyIfUndelivered: for commands the user is relying on
+    ///   — a stop they believe has ended the session, a calibration they
+    ///   believe was applied. The user is alerted if one has not gone out
+    ///   within a few connection cycles, or fails to send, or expires unsent.
+    ///   A failed or expired command is never retried: the user decides.
+    public func enqueue(_ command: Command, notifyIfUndelivered: Bool = false) {
         // Newest wins. Repeated trips through setup used to stack session
         // starts — seven went out in one connection — and because the queue
         // is persisted, a stale code-less start could reach the transmitter
         // ahead of the one carrying the sensor code the user actually typed.
         var superseded = 0
         lockedCommandQueue.mutate { queue in
-            superseded = queue.enqueue(command)
+            superseded = queue.enqueue(command, notifyIfUndelivered: notifyIfUndelivered)
         }
 
         if superseded > 0 {
             log.default("Replaced %d queued command(s) with %{public}@", superseded, String(describing: command))
+        } else {
+            log.default("Queued %{public}@", String(describing: command))
         }
 
         mutateState { state in
             state.pendingCommands = self.lockedCommandQueue.value.rawValues
+
+            // Asking again is the user's answer to an earlier one that did
+            // not get through.
+            if let undelivered = state.undeliveredCommand, undelivered.entry.command.supersededBy(command) {
+                state.undeliveredCommand = nil
+            }
 
             // Reflect the entered code straight away. Waiting until the
             // transmitter answered meant the screen said "Not used" for as
@@ -423,6 +441,7 @@ public final class G6CGMManager: CGMManager {
         // the new transmitter — the radio does not need rebuilding for a swap.
         session?.stop()
         lockedCommandQueue.mutate { $0.removeAll() }
+        lockedInFlightCommand.mutate { $0 = nil }
         raisedAlerts = []
 
         mutateState { state in
@@ -436,6 +455,7 @@ public final class G6CGMManager: CGMManager {
             state.latestReading = nil
             state.recentReadings = []
             state.pendingCommands = []
+            state.undeliveredCommand = nil
             state.lastSessionStartFailure = nil
         }
 
@@ -536,6 +556,10 @@ public final class G6CGMManager: CGMManager {
         // session delegate on BLE events.
         session?.start()
 
+        // Time-based alerts — signal loss, a command that has not got
+        // through — must not wait for a connection that may never come.
+        evaluateAlerts()
+
         if let lastDate = state.latestReading?.date {
             let gap = Date().timeIntervalSince(lastDate)
             if gap > Self.backfillGapThreshold {
@@ -557,8 +581,14 @@ public final class G6CGMManager: CGMManager {
     // MARK: - AlertResponder / AlertSoundVendor
 
     public func acknowledgeAlert(alertIdentifier: Alert.AlertIdentifier, completion: @escaping (Error?) -> Void) {
-        G6Alert(rawValue: alertIdentifier).map { alert in
+        let alert = G6Alert(rawValue: alertIdentifier)
+        alert.map { alert in
             log.default("Acknowledged alert: %{public}@", alert.rawValue)
+        }
+        if alert == .commandFailed {
+            mutateState { state in
+                state.undeliveredCommand?.acknowledged = true
+            }
         }
         completion(nil)
     }
@@ -859,14 +889,18 @@ extension G6CGMManager: TransmitterSessionDelegate {
 extension G6CGMManager: TransmitterCommandSource {
 
     public func dequeuePendingCommand(for session: TransmitterSession) -> Command? {
-        var next: Command?
-        var dropped: [Command] = []
+        var next: QueuedCommand?
+        var dropped: [QueuedCommand] = []
         lockedCommandQueue.mutate { queue in
-            (next, dropped) = queue.dequeue()
+            (next, dropped) = queue.dequeueEntry()
         }
+        lockedInFlightCommand.mutate { $0 = next }
 
-        for command in dropped {
-            log.default("Dropping stale command: %{public}@", String(describing: command))
+        for entry in dropped {
+            log.default("Dropping stale command: %{public}@", String(describing: entry.command))
+        }
+        if let expired = dropped.last(where: \.notifyIfUndelivered) {
+            recordUndelivered(expired, reason: .expired)
         }
 
         if next != nil || !dropped.isEmpty {
@@ -875,11 +909,24 @@ extension G6CGMManager: TransmitterCommandSource {
             }
         }
 
-        return next
+        return next?.command
     }
 
     public func transmitterSession(_ session: TransmitterSession, didFail command: Command, with error: Error) {
         log.error("Command failed: %{public}@ — %{public}@", String(describing: command), String(describing: error))
+
+        // Not retried, whatever the command: by the next connection a stop
+        // or start may no longer be what the user wants, and a calibration
+        // would no longer match the blood it was measured from.
+        var inFlight: QueuedCommand?
+        lockedInFlightCommand.mutate { value in
+            inFlight = value
+            value = nil
+        }
+
+        if let entry = inFlight, entry.command == command, entry.notifyIfUndelivered {
+            recordUndelivered(entry, reason: .sendFailed)
+        }
 
         if case .startSensor = command {
             // Genuine delivery failures only; a refusal that still produced a
@@ -891,8 +938,23 @@ extension G6CGMManager: TransmitterCommandSource {
         }
     }
 
+    /// Notes a flagged command that will not reach the transmitter, so the
+    /// user is alerted and can decide whether to ask again.
+    private func recordUndelivered(_ entry: QueuedCommand, reason: UndeliveredCommand.Reason) {
+        log.error("Not delivered (%{public}@): %{public}@", reason.rawValue, String(describing: entry.command))
+
+        // A fresh failure deserves its own alert even if an earlier one is
+        // still showing; the host replaces it under the same identifier.
+        raisedAlerts.remove(.commandFailed)
+
+        mutateState { state in
+            state.undeliveredCommand = UndeliveredCommand(entry: entry, reason: reason)
+        }
+    }
+
     public func transmitterSession(_ session: TransmitterSession, didComplete command: Command, response: TransmitterRxMessage?) {
         log.default("Command completed: %{public}@", String(describing: command))
+        lockedInFlightCommand.mutate { $0 = nil }
 
         switch command {
         case .startSensor(_, let sensorCode):

@@ -39,10 +39,18 @@ extension G6CGMManager {
 
             let now = Date()
             self.mutateStateForSimulation { state in
+                // A relaunch resumes a session that was already running
+                // rather than restarting warm-up, so a seeded state survives
+                // long enough to be looked at.
+
                 // Transmitter part-way through its life, sensor almost done
                 // warming up.
-                state.transmitterStartDate = now.addingTimeInterval(-.hours(24 * 12))
-                state.sensorStartDate = now.addingTimeInterval(-(state.warmupPeriod - Self.simulatedWarmupRemaining))
+                if state.transmitterStartDate == nil {
+                    state.transmitterStartDate = now.addingTimeInterval(-.hours(24 * 12))
+                }
+                if state.sensorStartDate == nil {
+                    state.sensorStartDate = now.addingTimeInterval(-(state.warmupPeriod - Self.simulatedWarmupRemaining))
+                }
                 // 180 days so the simulator presents as an Anubis, making the
                 // longer session length and expiry visible in the UI.
                 state.transmitterExpiryInDays = 180

@@ -193,8 +193,35 @@ final class G6SettingsViewModel: ObservableObject, G6CGMManagerObserver {
         }
     }
 
+    /// A stop that has not reached the transmitter. The session keeps
+    /// running until it does, so the screen must not look as if the stop
+    /// either worked or was ignored — a tester pressed the button three times
+    /// because nothing changed.
+    var pendingSessionStop: QueuedCommand? {
+        state.pendingSessionStop
+    }
+
+    /// A stop or calibration that failed to send or expired unsent, while
+    /// it is still worth telling the user about. Starts are left out: a
+    /// failed start already shows its own explanation.
+    var undeliveredCommandNotice: String? {
+        guard let undelivered = state.outstandingUndeliveredCommand else {
+            return nil
+        }
+        switch undelivered.entry.command {
+        case .stopSensor:
+            return LocalizedString("The stop could not be sent to the transmitter, so the session is still running. Stop it again with your phone close to the transmitter.", comment: "Shown when a session stop failed to send")
+        case .calibrateSensor:
+            return LocalizedString("Your last calibration could not be sent to the transmitter and was not applied. To calibrate, take a new fingerstick and enter it.", comment: "Shown when a calibration failed to send or expired unsent")
+        case .startSensor, .resetTransmitter:
+            return nil
+        }
+    }
+
     func stopSensor() {
-        cgmManager.enqueue(.stopSensor(at: Date()))
+        // Flagged: if the stop never lands, the user believes the session
+        // has ended while it carries on, so they must be told.
+        cgmManager.enqueue(.stopSensor(at: Date()), notifyIfUndelivered: true)
     }
 
     /// Current and previous log files. The manager's state is written out
@@ -274,6 +301,38 @@ struct G6SettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 } icon: {
                     ProgressView()
+                }
+            }
+
+            if let stop = viewModel.pendingSessionStop {
+                if stop.isDelayed() {
+                    Label {
+                        Text(LocalizedString("The stop is still waiting for the transmitter, so the session is still running. It is sent as soon as the transmitter connects. Keep your phone close to the transmitter; if its battery is low, it may not connect.", comment: "Shown while a session stop has waited several connection cycles"))
+                            .font(.footnote)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                    }
+                } else {
+                    Label {
+                        Text(LocalizedString("Session stop queued — it is sent the next time the transmitter connects, which can take up to 5 minutes. Readings continue until then.", comment: "Shown while a session stop is waiting for the next connection"))
+                            .font(.footnote)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } icon: {
+                        ProgressView()
+                    }
+                }
+            }
+
+            if let notice = viewModel.undeliveredCommandNotice {
+                Label {
+                    Text(notice)
+                        .font(.footnote)
+                        .fixedSize(horizontal: false, vertical: true)
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
                 }
             }
 
@@ -424,19 +483,25 @@ struct G6SettingsView: View {
                 .buttonStyle(G6RowButtonStyle())
                 .disabled(!viewModel.canCalibrate)
 
-                Button(role: .destructive) {
-                    showingStopConfirmation = true
-                } label: {
-                    Label(LocalizedString("Stop Sensor Session", comment: "Button to stop the sensor session"), systemImage: "stop.circle")
-                }
-                .confirmationDialog(
-                    LocalizedString("Stop this sensor session?", comment: "Confirmation title for stopping a session"),
-                    isPresented: $showingStopConfirmation,
-                    titleVisibility: .visible
-                ) {
-                    Button(LocalizedString("Stop Session", comment: "Confirm stop session"), role: .destructive, action: viewModel.stopSensor)
-                } message: {
-                    Text(LocalizedString("You will stop getting readings until you start a new sensor. A stopped session cannot be restarted.", comment: "Confirmation message for stopping a session"))
+                if viewModel.pendingSessionStop != nil {
+                    // Already queued; another tap would only replace it.
+                    Label(LocalizedString("Stopping Sensor Session…", comment: "Disabled row shown while a session stop waits for the transmitter"), systemImage: "stop.circle")
+                        .foregroundStyle(.secondary)
+                } else {
+                    Button(role: .destructive) {
+                        showingStopConfirmation = true
+                    } label: {
+                        Label(LocalizedString("Stop Sensor Session", comment: "Button to stop the sensor session"), systemImage: "stop.circle")
+                    }
+                    .confirmationDialog(
+                        LocalizedString("Stop this sensor session?", comment: "Confirmation title for stopping a session"),
+                        isPresented: $showingStopConfirmation,
+                        titleVisibility: .visible
+                    ) {
+                        Button(LocalizedString("Stop Session", comment: "Confirm stop session"), role: .destructive, action: viewModel.stopSensor)
+                    } message: {
+                        Text(LocalizedString("You will stop getting readings until you start a new sensor. A stopped session cannot be restarted.", comment: "Confirmation message for stopping a session"))
+                    }
                 }
             }
         } footer: {

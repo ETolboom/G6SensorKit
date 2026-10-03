@@ -92,4 +92,82 @@ class CommandQueueTests: XCTestCase {
         let queue = CommandQueue(rawValues: [["action": 99], [:]])
         XCTAssertTrue(queue.isEmpty)
     }
+
+    // MARK: - Delivery tracking
+
+    func testFlagAndQueuedAtSurviveRawValues() {
+        var queue = CommandQueue()
+        queue.enqueue(.stopSensor(at: now), notifyIfUndelivered: true, now: now)
+
+        let restored = CommandQueue(rawValues: queue.rawValues)
+        XCTAssertEqual(restored, queue)
+        XCTAssertEqual(restored.entries.first?.notifyIfUndelivered, true)
+        XCTAssertEqual(restored.entries.first?.queuedAt, now)
+    }
+
+    func testEntriesPersistedWithoutBookkeepingReadBackUnflagged() {
+        let legacy = Command.stopSensor(at: now).rawValue
+        let queue = CommandQueue(rawValues: [legacy])
+        XCTAssertEqual(queue.entries.first?.notifyIfUndelivered, false)
+        XCTAssertNil(queue.firstDelayed(now: now.addingTimeInterval(3600)))
+    }
+
+    func testFlaggedCommandIsDelayedOnlyAfterInterval() {
+        var queue = CommandQueue()
+        queue.enqueue(.stopSensor(at: now), notifyIfUndelivered: true, now: now)
+
+        XCTAssertNil(queue.firstDelayed(now: now.addingTimeInterval(.minutes(14))))
+        XCTAssertNotNil(queue.firstDelayed(now: now.addingTimeInterval(.minutes(16))))
+    }
+
+    func testUnflaggedCommandIsNeverDelayed() {
+        var queue = CommandQueue()
+        queue.enqueue(.startSensor(at: now, sensorCode: .none), now: now)
+        XCTAssertNil(queue.firstDelayed(now: now.addingTimeInterval(.hours(2))))
+    }
+
+    func testDequeuedCommandIsGoneFromQueue() {
+        // Nothing puts a sent command back: whether it lands or fails, the
+        // queue no longer holds it.
+        var queue = CommandQueue()
+        queue.enqueue(.stopSensor(at: now), notifyIfUndelivered: true, now: now)
+
+        let (entry, _) = queue.dequeueEntry(now: now)
+        XCTAssertNotNil(entry)
+        XCTAssertTrue(queue.isEmpty)
+        XCTAssertNil(queue.dequeueEntry(now: now).next)
+    }
+
+    func testFlaggedCalibrationIsNeverRetried() {
+        var queue = CommandQueue()
+        queue.enqueue(.calibrateSensor(toMgDL: 120, at: now), notifyIfUndelivered: true, now: now)
+
+        let (entry, dropped) = queue.dequeueEntry(now: now)
+        XCTAssertTrue(dropped.isEmpty)
+        guard case .calibrateSensor? = entry?.command else {
+            return XCTFail("expected the calibration to be handed out once")
+        }
+        XCTAssertTrue(queue.isEmpty)
+        XCTAssertNil(queue.dequeueEntry(now: now.addingTimeInterval(60)).next)
+    }
+
+    func testStaleFlaggedCalibrationIsReportedNotSent() {
+        var queue = CommandQueue()
+        let measured = now.addingTimeInterval(-360)
+        queue.enqueue(.calibrateSensor(toMgDL: 120, at: measured), notifyIfUndelivered: true, now: measured)
+
+        let (next, dropped) = queue.dequeueEntry(now: now)
+
+        XCTAssertNil(next)
+        XCTAssertEqual(dropped.count, 1)
+        XCTAssertEqual(dropped.first?.notifyIfUndelivered, true)
+        XCTAssertTrue(queue.isEmpty)
+    }
+
+    func testUndeliveredCommandSurvivesRawValue() {
+        let entry = QueuedCommand(.calibrateSensor(toMgDL: 120, at: now), queuedAt: now, notifyIfUndelivered: true)
+        let undelivered = UndeliveredCommand(entry: entry, reason: .expired, date: now, acknowledged: true)
+
+        XCTAssertEqual(UndeliveredCommand(rawValue: undelivered.rawValue), undelivered)
+    }
 }

@@ -95,15 +95,29 @@ extension G6CGMManager {
             }
         }
 
-        reconcileAlerts(due: due)
+        // A flagged command still queued well past the usual connection gap.
+        // Retracted once it goes out or is withdrawn.
+        let delayed = CommandQueue(rawValues: state.pendingCommands).firstDelayed(now: now)
+        if delayed != nil {
+            due.insert(.commandDelayed)
+        }
+
+        // A flagged command that failed or expired, until the user has seen
+        // the alert or the situation has resolved itself.
+        let undelivered = state.outstandingUndeliveredCommand
+        if let undelivered = undelivered, !undelivered.acknowledged {
+            due.insert(.commandFailed)
+        }
+
+        reconcileAlerts(due: due, delayed: delayed?.command, undelivered: undelivered)
     }
 
-    private func reconcileAlerts(due: Set<G6Alert>) {
+    private func reconcileAlerts(due: Set<G6Alert>, delayed: Command?, undelivered: UndeliveredCommand?) {
         let previously = raisedAlerts
 
         for alert in due.subtracting(previously) {
             log.default("Issuing alert: %{public}@", alert.rawValue)
-            let issued = alert.alert(managerIdentifier: Self.pluginIdentifier)
+            let issued = alert.alert(managerIdentifier: Self.pluginIdentifier, delayed: delayed, undelivered: undelivered)
             delegateForAlerts.notify { delegate in
                 delegate?.issueAlert(issued)
             }
