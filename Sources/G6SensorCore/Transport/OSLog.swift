@@ -54,7 +54,12 @@ extension OSLog {
             // os_log can't take the array as varargs: handing it over reads
             // garbage pointers for each %@ and crashes. Log the rendered line.
             assertionFailure("OSLog supports at most 5 arguments, got \(args.count): \(message)")
-            os_log("%{public}@", log: self, type: type, rendered)
+            // Keep the line private if any of its arguments were.
+            if "\(message)".contains("%{private}") {
+                os_log("%{private}@", log: self, type: type, rendered)
+            } else {
+                os_log("%{public}@", log: self, type: type, rendered)
+            }
         }
     }
 
