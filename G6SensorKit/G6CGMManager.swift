@@ -71,8 +71,6 @@ public final class G6CGMManager: CGMManager {
     /// Commands queued for the next connection cycle.
     private let lockedPendingCommands: Locked<[Command]> = Locked([])
 
-    private var lastBatteryReadDate: Date?
-
     /// Response code from a session start awaiting confirmation. The reply
     /// alone does not say whether a session began, so it is held until the
     /// transmitter's state settles the question.
@@ -353,11 +351,7 @@ public final class G6CGMManager: CGMManager {
     }
 
     /// Switches to a different transmitter without tearing down the CGM.
-    ///
-    /// Everything scoped to the old transmitter is cleared — its clock,
-    /// reported lifetime, firmware, peripheral handle, session and queued
-    /// commands — while the settings that belong to the user, such as remote
-    /// sync and the Anubis session length, are kept.
+    /// Clears everything tied to the old transmitter; user settings are kept.
     public func replaceTransmitter(id: String) {
         let previousID = state.transmitterID
         log.default("Replacing transmitter %{public}@ with %{public}@", previousID, id)
@@ -422,6 +416,7 @@ public final class G6CGMManager: CGMManager {
             state.recentReadings = []
             state.pendingCommands = []
             state.lastSessionStartFailure = nil
+            state.battery = nil
         }
 
         connectionPhase = .searching
@@ -530,7 +525,7 @@ public final class G6CGMManager: CGMManager {
             }
         }
 
-        if let last = lastBatteryReadDate, Date().timeIntervalSince(last) < Self.batteryReadInterval {
+        if let last = state.battery?.date, Date().timeIntervalSince(last) < Self.batteryReadInterval {
             // Battery was read recently.
         } else {
             session?.shouldReadBattery = true
@@ -632,16 +627,10 @@ extension G6CGMManager: TransmitterSessionDelegate {
     }
 
     public func transmitterSession(_ session: TransmitterSession, didReadBattery message: BatteryStatusRxMessage) {
-        lastBatteryReadDate = Date()
         log.default("Battery: A %d, B %d, resist %d", Int(message.voltageA), Int(message.voltageB), Int(message.resist))
 
         mutateState { state in
-            state.batteryVoltageA = message.voltageA
-            state.batteryVoltageB = message.voltageB
-            state.batteryResistance = message.resist
-            state.batteryRuntimeDays = message.runtime
-            state.batteryTemperature = message.temperature
-            state.lastBatteryReadDate = Date()
+            state.battery = G6BatteryStatus(message: message)
         }
 
         evaluateAlerts()

@@ -303,11 +303,8 @@ struct G6SettingsView: View {
         }
     }
 
-    /// The Sensor section's last row. Stays up for as long as the battery
-    /// reads very low; there is nothing to dismiss, because the only fix is
-    /// a new transmitter. A tester ran on a near-dead battery for a day of
-    /// dropped connections and an End Sensor that never got through, with
-    /// nothing on this screen to explain why.
+    /// Shown while battery B reads very low; not dismissible, since only a
+    /// new transmitter fixes it.
     private var batteryVeryLowRow: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "battery.0percent")

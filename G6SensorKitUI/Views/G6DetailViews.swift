@@ -232,43 +232,38 @@ struct G6TransmitterDetailsView: View {
 
     @ViewBuilder
     private var batterySection: some View {
-        if let voltageA = cgmManager.state.batteryVoltageAMillivolts,
-           let voltageB = cgmManager.state.batteryVoltageBMillivolts {
+        if let battery = cgmManager.state.battery {
             Section {
                 row(
                     LocalizedString("Voltage A", comment: "Transmitter detail label for battery A"),
-                    String(format: LocalizedString("%d mV", comment: "Voltage in millivolts (1: millivolts)"), voltageA)
+                    String(format: LocalizedString("%d mV", comment: "Voltage in millivolts (1: millivolts)"), battery.voltageAMillivolts)
                 )
                 HStack {
                     Text(LocalizedString("Voltage B", comment: "Transmitter detail label for battery B"))
                     Spacer()
-                    Text(String(format: LocalizedString("%d mV", comment: "Voltage in millivolts (1: millivolts)"), voltageB))
-                        .foregroundColor(cgmManager.state.isBatteryLow ? .orange : .secondary)
+                    Text(String(format: LocalizedString("%d mV", comment: "Voltage in millivolts (1: millivolts)"), battery.voltageBMillivolts))
+                        .foregroundColor(battery.isLow ? .orange : .secondary)
                 }
-                if let resistance = cgmManager.state.batteryResistance {
-                    row(
-                        LocalizedString("Resistance", comment: "Transmitter detail label for battery resistance"),
-                        String(Int(resistance))
-                    )
-                }
-                if let temperature = cgmManager.state.batteryTemperature {
+                row(
+                    LocalizedString("Resistance", comment: "Transmitter detail label for battery resistance"),
+                    String(Int(battery.resistance))
+                )
+                if let temperature = battery.temperature {
                     row(
                         LocalizedString("Temperature", comment: "Transmitter detail label for temperature"),
                         String(format: LocalizedString("%d °C", comment: "Temperature in Celsius (1: degrees)"), temperature)
                     )
                 }
-                if let read = cgmManager.state.lastBatteryReadDate {
-                    row(
-                        LocalizedString("Last checked", comment: "Transmitter detail label for last battery read"),
-                        read.formatted(date: .abbreviated, time: .shortened)
-                    )
-                }
+                row(
+                    LocalizedString("Last checked", comment: "Transmitter detail label for last battery read"),
+                    battery.date.formatted(date: .abbreviated, time: .shortened)
+                )
             } header: {
                 Text(LocalizedString("Battery", comment: "Transmitter details section header for battery"))
             } footer: {
-                if cgmManager.state.isBatteryVeryLow {
+                if battery.isVeryLow {
                     Text(LocalizedString("Voltage B is very low. This transmitter may stop sending readings at any time, even during a session. Replace it as soon as you can.", comment: "Footer shown when battery B is very low"))
-                } else if cgmManager.state.isBatteryLow {
+                } else if battery.isLow {
                     Text(LocalizedString("Voltage B is getting low. The transmitter should finish the sensor you are wearing, but order a replacement now.", comment: "Footer shown when battery B is low"))
                 } else {
                     Text(LocalizedString("Battery B is the cell that runs down first and determines whether the transmitter can finish a session.", comment: "Footer explaining what battery B means"))

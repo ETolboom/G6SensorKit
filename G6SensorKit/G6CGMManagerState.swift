@@ -97,38 +97,16 @@ public struct G6CGMManagerState: RawRepresentable {
 
     // MARK: - Battery
 
-    /// Hundredths of a volt (310 is 3.10 V).
-    public var batteryVoltageA: UInt16?
-    public var batteryVoltageB: UInt16?
-    public var batteryResistance: UInt16?
-    public var batteryRuntimeDays: Int?
-    public var batteryTemperature: Int?
-    public var lastBatteryReadDate: Date?
-
-    public var batteryVoltageAMillivolts: Int? {
-        return batteryVoltageA.map { Int($0) * 10 }
-    }
-
-    public var batteryVoltageBMillivolts: Int? {
-        return batteryVoltageB.map { Int($0) * 10 }
-    }
-
-    /// Battery B gives out first.
-    public static let batteryLowMillivolts = 2750
-    public static let batteryVeryLowMillivolts = 2700
+    /// Last battery read of the current transmitter; nil until read or after
+    /// the transmitter is replaced.
+    public var battery: G6BatteryStatus?
 
     public var isBatteryLow: Bool {
-        guard let millivolts = batteryVoltageBMillivolts else {
-            return false
-        }
-        return millivolts <= Self.batteryLowMillivolts
+        return battery?.isLow ?? false
     }
 
     public var isBatteryVeryLow: Bool {
-        guard let millivolts = batteryVoltageBMillivolts else {
-            return false
-        }
-        return millivolts <= Self.batteryVeryLowMillivolts
+        return battery?.isVeryLow ?? false
     }
 
     public init(
@@ -148,7 +126,8 @@ public struct G6CGMManagerState: RawRepresentable {
         setupStep: G6SetupStep? = nil,
         pendingCommands: [Command.RawValue] = [],
         lastSessionStartFailure: String? = nil,
-        algorithmStateRawValue: UInt8? = nil
+        algorithmStateRawValue: UInt8? = nil,
+        battery: G6BatteryStatus? = nil
     ) {
         self.transmitterID = transmitterID
         self.peripheralIdentifier = peripheralIdentifier
@@ -167,6 +146,7 @@ public struct G6CGMManagerState: RawRepresentable {
         self.pendingCommands = pendingCommands
         self.lastSessionStartFailure = lastSessionStartFailure
         self.algorithmStateRawValue = algorithmStateRawValue
+        self.battery = battery
     }
 
     public init?(rawValue: RawValue) {
@@ -195,15 +175,9 @@ public struct G6CGMManagerState: RawRepresentable {
             setupStep: (rawValue["setupStep"] as? String).flatMap(G6SetupStep.init(rawValue:)),
             pendingCommands: rawValue["pendingCommands"] as? [Command.RawValue] ?? [],
             lastSessionStartFailure: rawValue["lastSessionStartFailure"] as? String,
-            algorithmStateRawValue: (rawValue["algorithmState"] as? Int).map { UInt8(clamping: $0) }
+            algorithmStateRawValue: (rawValue["algorithmState"] as? Int).map { UInt8(clamping: $0) },
+            battery: (rawValue["battery"] as? G6BatteryStatus.RawValue).flatMap(G6BatteryStatus.init(rawValue:))
         )
-
-        batteryVoltageA = (rawValue["batteryVoltageA"] as? Int).map { UInt16(clamping: $0) }
-        batteryVoltageB = (rawValue["batteryVoltageB"] as? Int).map { UInt16(clamping: $0) }
-        batteryResistance = (rawValue["batteryResistance"] as? Int).map { UInt16(clamping: $0) }
-        batteryRuntimeDays = rawValue["batteryRuntimeDays"] as? Int
-        batteryTemperature = rawValue["batteryTemperature"] as? Int
-        lastBatteryReadDate = rawValue["lastBatteryReadDate"] as? Date
     }
 
     public var rawValue: RawValue {
@@ -239,12 +213,7 @@ public struct G6CGMManagerState: RawRepresentable {
         raw["lastSessionStartFailure"] = lastSessionStartFailure
         raw["algorithmState"] = algorithmStateRawValue.map { Int($0) }
 
-        raw["batteryVoltageA"] = batteryVoltageA.map { Int($0) }
-        raw["batteryVoltageB"] = batteryVoltageB.map { Int($0) }
-        raw["batteryResistance"] = batteryResistance.map { Int($0) }
-        raw["batteryRuntimeDays"] = batteryRuntimeDays
-        raw["batteryTemperature"] = batteryTemperature
-        raw["lastBatteryReadDate"] = lastBatteryReadDate
+        raw["battery"] = battery?.rawValue
 
         return raw
     }
@@ -405,6 +374,91 @@ public struct G6StoredReading: RawRepresentable, Equatable {
     }
 }
 
+/// One battery status read from the transmitter.
+public struct G6BatteryStatus: RawRepresentable, Equatable {
+    public typealias RawValue = [String: Any]
+
+    /// Battery B gives out first.
+    public static let lowMillivolts = 2750
+    public static let veryLowMillivolts = 2700
+
+    /// Hundredths of a volt (310 is 3.10 V).
+    public let voltageA: UInt16
+    public let voltageB: UInt16
+    public let resistance: UInt16
+    public let runtimeDays: Int?
+    public let temperature: Int?
+    public let date: Date
+
+    public init(voltageA: UInt16, voltageB: UInt16, resistance: UInt16, runtimeDays: Int?, temperature: Int?, date: Date) {
+        self.voltageA = voltageA
+        self.voltageB = voltageB
+        self.resistance = resistance
+        self.runtimeDays = runtimeDays
+        self.temperature = temperature
+        self.date = date
+    }
+
+    public init(message: BatteryStatusRxMessage, date: Date = Date()) {
+        self.init(
+            voltageA: message.voltageA,
+            voltageB: message.voltageB,
+            resistance: message.resist,
+            runtimeDays: message.runtime,
+            temperature: message.temperature,
+            date: date
+        )
+    }
+
+    public init?(rawValue: RawValue) {
+        guard let voltageA = rawValue["voltageA"] as? Int,
+              let voltageB = rawValue["voltageB"] as? Int,
+              let resistance = rawValue["resistance"] as? Int,
+              let date = rawValue["date"] as? Date
+        else {
+            return nil
+        }
+
+        self.init(
+            voltageA: UInt16(clamping: voltageA),
+            voltageB: UInt16(clamping: voltageB),
+            resistance: UInt16(clamping: resistance),
+            runtimeDays: rawValue["runtimeDays"] as? Int,
+            temperature: rawValue["temperature"] as? Int,
+            date: date
+        )
+    }
+
+    // UInt16 cannot round-trip through a property list, so store Int.
+    public var rawValue: RawValue {
+        var raw: RawValue = [
+            "voltageA": Int(voltageA),
+            "voltageB": Int(voltageB),
+            "resistance": Int(resistance),
+            "date": date,
+        ]
+        raw["runtimeDays"] = runtimeDays
+        raw["temperature"] = temperature
+        return raw
+    }
+
+    public var voltageAMillivolts: Int {
+        return Int(voltageA) * 10
+    }
+
+    public var voltageBMillivolts: Int {
+        return Int(voltageB) * 10
+    }
+
+    public var isLow: Bool {
+        return voltageBMillivolts <= Self.lowMillivolts
+    }
+
+    public var isVeryLow: Bool {
+        return voltageBMillivolts <= Self.veryLowMillivolts
+    }
+}
+
 // [String: Any] is not Equatable, so the conformance is written out. The
 // change detection in the manager depends on it: without it every state
 // write would notify observers and re-persist.
@@ -426,12 +480,7 @@ extension G6CGMManagerState: Equatable {
             && lhs.setupStep == rhs.setupStep
             && lhs.lastSessionStartFailure == rhs.lastSessionStartFailure
             && lhs.algorithmStateRawValue == rhs.algorithmStateRawValue
-            && lhs.batteryVoltageA == rhs.batteryVoltageA
-            && lhs.batteryVoltageB == rhs.batteryVoltageB
-            && lhs.batteryResistance == rhs.batteryResistance
-            && lhs.batteryRuntimeDays == rhs.batteryRuntimeDays
-            && lhs.batteryTemperature == rhs.batteryTemperature
-            && lhs.lastBatteryReadDate == rhs.lastBatteryReadDate
+            && lhs.battery == rhs.battery
             && NSArray(array: lhs.pendingCommands) == NSArray(array: rhs.pendingCommands)
     }
 }
